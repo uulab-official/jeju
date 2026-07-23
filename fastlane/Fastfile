@@ -1,0 +1,681 @@
+require "shellwords"
+require "json"
+require_relative "uulab_app_store_screenshots"
+
+default_platform(:ios)
+
+APP_IDENTIFIER = "kr.co.uulab.jeju"
+APPLE_ID = "bonjin.app@gmail.com"
+TEAM_ID = "N99FMBQ662"
+ITC_TEAM_ID = "122768963"
+ASC_APP_ID = "6793418676"
+MATCH_GIT_URL = "https://github.com/uulab-official/certificates.git"
+PROFILE_NAME = "match AppStore #{APP_IDENTIFIER}"
+IPA_BASENAME = "#{APP_IDENTIFIER.split('.').last}-ios-production"
+ARCHIVE_PATH = "dist/#{APP_IDENTIFIER.split('.').last}-ios-production.xcarchive"
+IPA_PATH = "dist/#{IPA_BASENAME}.ipa"
+PROJECT_ROOT = File.expand_path("..", __dir__)
+
+def load_local_env
+  [".env", ".env.local"].each do |file|
+    next unless File.exist?(file)
+
+    File.readlines(file).each do |line|
+      trimmed = line.strip
+      next if trimmed.empty? || trimmed.start_with?("#") || !trimmed.include?("=")
+
+      key, value = trimmed.split("=", 2)
+      ENV[key.strip] ||= value.strip.gsub(/\A['"]|['"]\z/, "")
+    end
+  end
+end
+
+def app_store_connect_key
+  key_id = ENV["APP_STORE_CONNECT_KEY_ID"]
+  issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"]
+  key_path = ENV["APP_STORE_CONNECT_KEY_PATH"]
+  return nil if key_id.to_s.empty? || issuer_id.to_s.empty? || key_path.to_s.empty?
+
+  app_store_connect_api_key(
+    key_id: key_id,
+    issuer_id: issuer_id,
+    key_filepath: key_path,
+    duration: 1200,
+    in_house: false
+  )
+end
+
+def app_specific_password
+  return ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"] unless ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"].to_s.empty?
+
+  password = sh("security find-generic-password -a #{APPLE_ID.shellescape} -s uulab-fastlane-app-specific-password -w", log: false).strip
+  ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"] = password unless password.empty?
+  password
+rescue
+  ""
+end
+
+def upload_with_xcodebuild(archive_path)
+  upload_options_path = "/tmp/#{APP_IDENTIFIER.split('.').last}-ios-fastlane-uploadOptions.plist"
+  export_path = "/tmp/#{APP_IDENTIFIER.split('.').last}-ios-fastlane-upload"
+
+  sh("rm -rf '#{export_path}' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Clear dict' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :method string app-store-connect' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :destination string upload' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :teamID string #{TEAM_ID}' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :signingStyle string automatic' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :stripSwiftSymbols bool true' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :uploadSymbols bool true' '#{upload_options_path}'")
+  sh("/usr/libexec/PlistBuddy -c 'Add :manageAppVersionAndBuildNumber bool false' '#{upload_options_path}'")
+
+  sh(
+    "xcodebuild -exportArchive " \
+    "-archivePath '#{archive_path}' " \
+    "-exportPath '#{export_path}' " \
+    "-exportOptionsPlist '#{upload_options_path}' " \
+    "-allowProvisioningUpdates"
+  )
+end
+
+def next_local_build_number
+  build_number = ENV["LOCAL_BUILD_NUMBER"] || ENV["WELOG_BUILD_NUMBER"]
+  build_number.to_s.empty? ? Time.now.strftime("%Y%m%d%H%M") : build_number
+end
+
+def current_expo_config
+  config_path = ["app.base.json", "app.json"].map { |name| File.join(PROJECT_ROOT, name) }.find { |path| File.exist?(path) }
+  UI.user_error!("Expo app config not found under #{PROJECT_ROOT}") unless config_path
+  JSON.parse(File.read(config_path)).fetch("expo")
+end
+
+def current_app_version
+  current_expo_config.fetch("version")
+end
+
+def current_ios_build_number
+  current_expo_config.fetch("ios").fetch("buildNumber").to_s
+end
+
+def review_metadata_value(file_name)
+  path = File.join(PROJECT_ROOT, "fastlane", "metadata", "review_information", file_name)
+  return nil unless File.exist?(path)
+
+  value = File.read(path).strip
+  value.empty? ? nil : value
+end
+
+def jeju_app_review_information
+  {
+    first_name: review_metadata_value("first_name.txt"),
+    last_name: review_metadata_value("last_name.txt"),
+    phone_number: review_metadata_value("phone_number.txt"),
+    email_address: review_metadata_value("email_address.txt"),
+    notes: review_metadata_value("notes.txt"),
+    demo_user: nil,
+    demo_password: nil
+  }
+end
+
+def skip_missing_review_attachment_cleanup
+  require "deliver/upload_metadata"
+
+  Deliver::UploadMetadata.class_eval do
+    unless method_defined?(:jeju_original_review_attachment_file)
+      alias_method :jeju_original_review_attachment_file, :review_attachment_file
+
+      def review_attachment_file(version)
+        jeju_original_review_attachment_file(version)
+      rescue RuntimeError => error
+        raise unless error.message == "No data"
+
+        UI.message("No app review detail found. Skipping review attachment cleanup.")
+      end
+    end
+  end
+end
+
+def app_store_session_and_app
+  session = Spaceship::ConnectAPI.login(
+    APPLE_ID,
+    nil,
+    use_portal: false,
+    use_tunes: true,
+    tunes_team_id: ITC_TEAM_ID
+  )
+  app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+  UI.user_error!("App not found on App Store Connect: #{APP_IDENTIFIER}") unless app
+  [session, app]
+end
+
+def app_store_live_snapshot(app:, client:)
+  live_version = app.get_live_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+  availability = client.get(
+    "v2/appAvailabilities/#{app.id}",
+    { "include" => "territoryAvailabilities", "limit[territoryAvailabilities]" => 200 }
+  ).body
+  territories = availability.fetch("included", [])
+
+  schedule = begin
+               client.get("v1/apps/#{app.id}/appPriceSchedule").body["data"]
+             rescue Spaceship::UnexpectedResponse
+               nil
+             end
+  active_base_price = nil
+  if schedule&.fetch("type", nil) == "appPriceSchedules"
+    prices = client.get(
+      "v1/appPriceSchedules/#{schedule.fetch('id')}/manualPrices",
+      {
+        "filter[territory]" => ENV["APP_STORE_BASE_TERRITORY"] || "USA",
+        "include" => "appPricePoint",
+        "limit" => 200
+      }
+    ).body
+    points = prices.fetch("included", []).to_h { |item| [item.fetch("id"), item] }
+    active = prices.fetch("data", []).find { |price| price.dig("attributes", "endDate").nil? }
+    point_id = active&.dig("relationships", "appPricePoint", "data", "id")
+    active_base_price = points.dig(point_id, "attributes", "customerPrice") if point_id
+  end
+
+  {
+    version: live_version&.version_string,
+    state: live_version&.app_store_state,
+    downloadable: live_version&.downloadable,
+    available_territories: territories.count { |item| item.dig("attributes", "available") == true },
+    processing_territories: territories.count do |item|
+      (item.dig("attributes", "contentStatuses") || []).any? { |status| status.to_s.start_with?("PROCESSING_") }
+    end,
+    active_base_price: active_base_price
+  }
+end
+
+def verify_app_store_live_snapshot!(snapshot)
+  UI.user_error!("No live App Store version is available") if snapshot[:version].to_s.empty?
+  UI.user_error!("Live App Store version is #{snapshot[:state]}, expected READY_FOR_SALE") unless snapshot[:state] == "READY_FOR_SALE"
+  UI.user_error!("Live App Store version is not downloadable") unless snapshot[:downloadable]
+  UI.user_error!("App Store availability has no enabled territories") unless snapshot[:available_territories].positive?
+  UI.user_error!("App Store availability is still processing") unless snapshot[:processing_territories].zero?
+  UI.user_error!("App Store base-territory price schedule is missing") if snapshot[:active_base_price].nil?
+end
+
+platform :ios do
+  desc "Sync App Store signing assets with fastlane match"
+  lane :match_appstore do
+    load_local_env
+
+    match(
+      type: "appstore",
+      app_identifier: APP_IDENTIFIER,
+      username: APPLE_ID,
+      team_id: TEAM_ID,
+      git_url: MATCH_GIT_URL,
+      readonly: false
+    )
+  end
+
+  desc "Build locally and upload to TestFlight without EAS Cloud Build"
+  lane :beta do
+    load_local_env
+    app_specific_password
+
+    match(
+      type: "appstore",
+      app_identifier: APP_IDENTIFIER,
+      username: APPLE_ID,
+      team_id: TEAM_ID,
+      git_url: MATCH_GIT_URL,
+      readonly: false
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "ios/app.xcodeproj",
+      team_id: TEAM_ID,
+      code_sign_identity: "Apple Distribution",
+      profile_name: PROFILE_NAME,
+      targets: ["app"],
+      build_configurations: ["Release"]
+    )
+
+    increment_build_number(
+      xcodeproj: "ios/app.xcodeproj",
+      build_number: next_local_build_number
+    )
+
+    gym(
+      workspace: "ios/app.xcworkspace",
+      scheme: "app",
+      configuration: "Release",
+      clean: false,
+      output_directory: "dist",
+      output_name: IPA_BASENAME,
+      archive_path: ARCHIVE_PATH,
+      export_method: "app-store",
+      export_options: {
+        method: "app-store-connect",
+        signingStyle: "manual",
+        teamID: TEAM_ID,
+        provisioningProfiles: {
+          APP_IDENTIFIER => PROFILE_NAME
+        },
+        manageAppVersionAndBuildNumber: false,
+        uploadSymbols: true
+      },
+      xcargs: "DEVELOPMENT_TEAM=#{TEAM_ID}"
+    )
+
+    upload_options = {
+      app_identifier: APP_IDENTIFIER,
+      app_platform: "ios",
+      username: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      dev_portal_team_id: TEAM_ID,
+      ipa: IPA_PATH,
+      skip_waiting_for_build_processing: true,
+      distribute_external: false,
+      notify_external_testers: false
+    }
+    upload_options[:apple_id] = ASC_APP_ID unless ASC_APP_ID.to_s.empty?
+
+    api_key = app_store_connect_key
+    upload_options[:api_key] = api_key if api_key
+
+    if api_key || !ENV["FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD"].to_s.empty?
+      upload_to_testflight(upload_options)
+    else
+      UI.important("No App Store Connect API key or app-specific password found. Falling back to xcodebuild upload using the signed-in Xcode account.")
+      upload_with_xcodebuild(ARCHIVE_PATH)
+    end
+  end
+
+  desc "Upload an existing local archive using the signed-in Xcode account"
+  lane :upload_xcode do
+    load_local_env
+    archive_path = ENV["LOCAL_ARCHIVE_PATH"] || ENV["WELOG_ARCHIVE_PATH"] || ARCHIVE_PATH
+    upload_with_xcodebuild(archive_path)
+  end
+
+  desc "Upload App Store metadata and synchronize screenshots"
+  lane :metadata do
+    load_local_env
+    skip_missing_review_attachment_cleanup
+    metadata_path = File.join(PROJECT_ROOT, "fastlane", "metadata")
+    screenshots_path = File.join(PROJECT_ROOT, "fastlane", "screenshots")
+    screenshot_files = Dir.glob(File.join(screenshots_path, "**", "*.{png,jpg,jpeg}"), File::FNM_CASEFOLD)
+    skip_screenshots = ENV["IOS_SKIP_SCREENSHOTS"] == "1" || screenshot_files.empty?
+
+    deliver(
+      app_identifier: APP_IDENTIFIER,
+      app_version: current_app_version,
+      username: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      dev_portal_team_id: TEAM_ID,
+      metadata_path: metadata_path,
+      screenshots_path: screenshots_path,
+      copyright: "2026 UULab",
+      primary_category: "TRAVEL",
+      secondary_category: "EDUCATION",
+      app_rating_config_path: File.join(metadata_path, "age_rating.json"),
+      app_review_information: jeju_app_review_information,
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: skip_screenshots,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: true
+      },
+      force: true,
+      run_precheck_before_submit: false
+    )
+
+    unless skip_screenshots
+      version = UulabAppStoreScreenshots.version(
+        app_identifier: APP_IDENTIFIER,
+        apple_id: APPLE_ID,
+        team_id: ITC_TEAM_ID,
+        expected_version: current_app_version
+      )
+      UulabAppStoreScreenshots.reconcile!(version: version, screenshots_path: screenshots_path)
+    end
+  end
+
+  desc "Upload App Store privacy nutrition details as a draft unless IOS_PRIVACY_PUBLISH=1"
+  lane :privacy do
+    load_local_env
+    app_specific_password
+
+    upload_app_privacy_details_to_app_store(
+      app_identifier: APP_IDENTIFIER,
+      username: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      json_path: File.join(PROJECT_ROOT, "fastlane", "app_privacy_details.json"),
+      skip_publish: ENV["IOS_PRIVACY_PUBLISH"] != "1"
+    )
+  end
+
+  desc "Attach the processed build and fill App Review prerequisites without submitting"
+  lane :prepare_store_version do |options|
+    load_local_env
+    app_specific_password
+    require "spaceship"
+
+    review_version = options[:version] || ENV["IOS_REVIEW_VERSION"] || current_app_version
+    build_number = options[:build_number] || ENV["IOS_REVIEW_BUILD_NUMBER"] || current_ios_build_number
+
+    Spaceship::ConnectAPI.login(
+      APPLE_ID,
+      nil,
+      use_portal: false,
+      use_tunes: true,
+      tunes_team_id: ITC_TEAM_ID
+    )
+    app = Spaceship::ConnectAPI::App.find(APP_IDENTIFIER)
+    UI.user_error!("App not found on App Store Connect: #{APP_IDENTIFIER}") unless app
+
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("Editable App Store version not found for #{APP_IDENTIFIER}") unless version
+
+    build = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      version: review_version,
+      build_number: build_number,
+      platform: Spaceship::ConnectAPI::Platform::IOS,
+      processing_states: "VALID"
+    ).first
+    UI.user_error!("Processed build #{review_version} (#{build_number}) not found") unless build
+
+    version.select_build(build_id: build.id)
+    build.update(attributes: { usesNonExemptEncryption: false }) unless build.uses_non_exempt_encryption == false
+    app.update(
+      attributes: {
+        contentRightsDeclaration: Spaceship::ConnectAPI::App::ContentRightsDeclaration::USES_THIRD_PARTY_CONTENT
+      }
+    )
+
+    review_info = jeju_app_review_information
+    review_attributes = {
+      contact_first_name: review_info[:first_name],
+      contact_last_name: review_info[:last_name],
+      contact_phone: review_info[:phone_number],
+      contact_email: review_info[:email_address],
+      notes: review_info[:notes]
+    }.compact
+    review_detail = begin
+                      version.fetch_app_store_review_detail
+                    rescue
+                      nil
+                    end
+    if review_detail
+      review_detail.update(attributes: review_attributes)
+    else
+      version.create_app_store_review_detail(attributes: review_attributes)
+    end
+
+    UI.success("Prepared App Store version #{version.version_string} with build #{review_version} (#{build_number})")
+  end
+
+  desc "Report the current App Store base price without changing it"
+  lane :pricing_status do
+    load_local_env
+    require "spaceship"
+
+    session, app = app_store_session_and_app
+    schedule = begin
+                 session.tunes_request_client.get("v1/apps/#{app.id}/appPriceSchedule").body["data"]
+               rescue Spaceship::UnexpectedResponse
+                 nil
+               end
+    UI.user_error!("App Store price schedule is missing") unless schedule
+
+    base_territory = ENV["APP_STORE_BASE_TERRITORY"] || "USA"
+    prices = session.tunes_request_client.get(
+      "v1/appPriceSchedules/#{schedule.fetch('id')}/manualPrices",
+      {
+        "filter[territory]" => base_territory,
+        "include" => "appPricePoint",
+        "limit" => 200
+      }
+    ).body
+    points = prices.fetch("included", []).to_h { |item| [item.fetch("id"), item] }
+    active = prices.fetch("data", []).find { |price| price.dig("attributes", "endDate").nil? }
+    point_id = active&.dig("relationships", "appPricePoint", "data", "id")
+    customer_price = points.dig(point_id, "attributes", "customerPrice")
+    UI.user_error!("No active App Store price was found for #{base_territory}") if customer_price.nil?
+    UI.success("App Store base price in #{base_territory}: #{customer_price}")
+  end
+
+  desc "Set the App Store price schedule to free after an explicit release decision"
+  lane :set_free_price do
+    load_local_env
+    UI.user_error!("Set APP_STORE_PRICE_DECISION=free to create a free price schedule") unless ENV["APP_STORE_PRICE_DECISION"] == "free"
+    app_specific_password
+    require "spaceship"
+
+    session, app = app_store_session_and_app
+    client = session.tunes_request_client
+    base_territory = ENV["APP_STORE_BASE_TERRITORY"] || "USA"
+    existing_schedule = begin
+                          client.get("v1/apps/#{app.id}/appPriceSchedule").body["data"]
+                        rescue Spaceship::UnexpectedResponse
+                          nil
+                        end
+    if existing_schedule
+      current_prices = begin
+                         client.get(
+                           "v1/appPriceSchedules/#{existing_schedule.fetch('id')}/manualPrices",
+                           {
+                             "filter[territory]" => base_territory,
+                             "include" => "appPricePoint",
+                             "limit" => 200
+                           }
+                         ).body
+                       rescue Spaceship::UnexpectedResponse => error
+                         raise unless error.message.include?("There is no resource of type 'null'")
+
+                         UI.message("App Store returned an empty first-release price schedule; creating its initial price")
+                         { "data" => [], "included" => [] }
+                       end
+      points = current_prices.fetch("included", []).to_h { |item| [item.fetch("id"), item] }
+      active_free = current_prices.fetch("data", []).any? do |price|
+        point_id = price.dig("relationships", "appPricePoint", "data", "id")
+        points.dig(point_id, "attributes", "customerPrice")&.to_f&.zero? &&
+          price.dig("attributes", "endDate").nil?
+      end
+      if active_free
+        UI.success("App Store price schedule is already free in #{base_territory}")
+        next
+      end
+      unless current_prices.fetch("data", []).empty?
+        UI.user_error!("A non-free App Store price schedule already exists; review it manually before changing")
+      end
+    end
+
+    price_points = client.get(
+      "v1/apps/#{app.id}/appPricePoints",
+      { "filter[territory]" => base_territory, "limit" => 200 }
+    ).body.fetch("data")
+    free_price_point = price_points.find { |price_point| price_point.dig("attributes", "customerPrice").to_f.zero? }
+    UI.user_error!("Could not find a free App Store price point for #{base_territory}") unless free_price_point
+
+    price_reference = "${free-base-price}"
+    client.post(
+      "v1/appPriceSchedules",
+      {
+        data: {
+          type: "appPriceSchedules",
+          relationships: {
+            app: { data: { type: "apps", id: app.id } },
+            baseTerritory: { data: { type: "territories", id: base_territory } },
+            manualPrices: { data: [{ type: "appPrices", id: price_reference }] }
+          }
+        },
+        included: [{
+          type: "appPrices",
+          id: price_reference,
+          attributes: { startDate: nil, endDate: nil },
+          relationships: {
+            appPricePoint: { data: { type: "appPricePoints", id: free_price_point.fetch("id") } }
+          }
+        }]
+      }
+    )
+    UI.success("Created a free App Store price schedule using #{base_territory} as the base territory")
+  end
+
+  desc "Audit App Store screenshots without changing remote data"
+  lane :screenshots_audit do
+    load_local_env
+    version = UulabAppStoreScreenshots.version(
+      app_identifier: APP_IDENTIFIER,
+      apple_id: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      expected_version: current_app_version,
+      editable_only: false
+    )
+    UulabAppStoreScreenshots.verify!(version: version, screenshots_path: File.join(PROJECT_ROOT, "fastlane", "screenshots"))
+  end
+
+  desc "Delete exact duplicate App Store screenshots after explicit confirmation"
+  lane :screenshots_deduplicate do
+    load_local_env
+    UI.user_error!("Set IOS_CONFIRM_SCREENSHOT_DELETE=1 to delete screenshots") unless ENV["IOS_CONFIRM_SCREENSHOT_DELETE"] == "1"
+    version = UulabAppStoreScreenshots.version(
+      app_identifier: APP_IDENTIFIER,
+      apple_id: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      expected_version: current_app_version
+    )
+    screenshots_path = File.join(PROJECT_ROOT, "fastlane", "screenshots")
+    UulabAppStoreScreenshots.deduplicate!(version: version)
+    UulabAppStoreScreenshots.verify!(
+      version: version,
+      screenshots_path: screenshots_path,
+      attempts: 8,
+      required_clean_reads: 2
+    )
+  end
+
+  desc "Report live App Store availability, price, and review state without changing data"
+  lane :store_status do
+    load_local_env
+    require "spaceship"
+
+    session, app = app_store_session_and_app
+    snapshot = app_store_live_snapshot(app: app, client: session.tunes_request_client)
+    verify_app_store_live_snapshot!(snapshot)
+    UI.success("Live App Store health: version #{snapshot[:version]}, #{snapshot[:available_territories]} territories, base price #{snapshot[:active_base_price]}")
+
+    submission = app.get_in_progress_review_submission(
+      platform: Spaceship::ConnectAPI::Platform::IOS,
+      includes: "appStoreVersionForReview,items"
+    )
+    UI.message("App Store review submission: #{submission&.state || 'none'}")
+  end
+
+  desc "Cancel only an explicitly named waiting/in-review version; never an approved or live version"
+  lane :cancel_review do
+    load_local_env
+    UI.user_error!("Set IOS_CONFIRM_CANCEL_REVIEW=1 to cancel the current review submission") unless ENV["IOS_CONFIRM_CANCEL_REVIEW"] == "1"
+    expected_version = ENV["IOS_CANCEL_REVIEW_VERSION"].to_s
+    expected_state = ENV["IOS_CANCEL_REVIEW_STATE"].to_s
+    UI.user_error!("Set IOS_CANCEL_REVIEW_VERSION to the exact version being cancelled") if expected_version.empty?
+    UI.user_error!("Set IOS_CANCEL_REVIEW_STATE to WAITING_FOR_REVIEW or IN_REVIEW") unless %w[WAITING_FOR_REVIEW IN_REVIEW].include?(expected_state)
+    require "spaceship"
+
+    session, app = app_store_session_and_app
+    live_before = app_store_live_snapshot(app: app, client: session.tunes_request_client)
+    verify_app_store_live_snapshot!(live_before)
+    candidates = app.get_app_store_versions(
+      filter: {
+        appVersionState: "WAITING_FOR_REVIEW,IN_REVIEW",
+        platform: Spaceship::ConnectAPI::Platform::IOS
+      },
+      includes: "appStoreVersionSubmission"
+    )
+    target = candidates.find do |version|
+      version.version_string == expected_version && version.app_store_state == expected_state
+    end
+    UI.user_error!("No matching #{expected_version} #{expected_state} review version was found") unless target
+
+    target.reject!
+
+    live_after = app_store_live_snapshot(app: app, client: session.tunes_request_client)
+    verify_app_store_live_snapshot!(live_after)
+    unless live_before.values_at(:version, :state, :downloadable) == live_after.values_at(:version, :state, :downloadable)
+      UI.user_error!("Live App Store version changed unexpectedly while cancelling review")
+    end
+    UI.success("Cancelled App Store review for #{expected_version}; live #{live_after[:version]} remains on sale")
+  end
+
+  desc "Submit the selected build without uploading screenshots again"
+  lane :submit_review do
+    load_local_env
+    skip_missing_review_attachment_cleanup
+    metadata_path = File.join(PROJECT_ROOT, "fastlane", "metadata")
+    screenshots_path = File.join(PROJECT_ROOT, "fastlane", "screenshots")
+    version = UulabAppStoreScreenshots.version(
+      app_identifier: APP_IDENTIFIER,
+      apple_id: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      expected_version: current_app_version
+    )
+    UulabAppStoreScreenshots.verify!(
+      version: version,
+      screenshots_path: screenshots_path,
+      attempts: 8,
+      required_clean_reads: 2
+    )
+
+    deliver(
+      app_identifier: APP_IDENTIFIER,
+      app_version: current_app_version,
+      build_number: ENV["IOS_REVIEW_BUILD_NUMBER"] || current_ios_build_number,
+      username: APPLE_ID,
+      team_id: ITC_TEAM_ID,
+      dev_portal_team_id: TEAM_ID,
+      skip_binary_upload: true,
+      metadata_path: metadata_path,
+      skip_metadata: false,
+      skip_screenshots: true,
+      copyright: "2026 UULab",
+      primary_category: "TRAVEL",
+      secondary_category: "EDUCATION",
+      app_rating_config_path: File.join(metadata_path, "age_rating.json"),
+      app_review_information: jeju_app_review_information,
+      submit_for_review: true,
+      automatic_release: false,
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        content_rights_contains_third_party_content: true
+      },
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+end
+
+platform :android do
+  desc "Upload Google Play metadata and synchronize images without uploading an AAB"
+  lane :metadata do
+    json_key = ENV["SUPPLY_JSON_KEY"]
+    json_key = File.join(PROJECT_ROOT, "credentials", "play-service-account.json") if json_key.to_s.empty?
+    UI.user_error!("Google Play service account key not found: #{json_key}") unless File.exist?(json_key)
+
+    supply(
+      package_name: APP_IDENTIFIER,
+      json_key: json_key,
+      metadata_path: File.join(PROJECT_ROOT, "fastlane", "metadata", "android"),
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_changelogs: true,
+      sync_image_upload: true,
+      track: "internal",
+      timeout: 300
+    )
+
+    sh("bundle exec ruby #{File.join(PROJECT_ROOT, "scripts", "verify-google-play-remote-assets.rb")}")
+  end
+end

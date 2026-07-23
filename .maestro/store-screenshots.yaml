@@ -1,0 +1,43 @@
+appId: kr.co.uulab.jeju
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "취소"
+    optional: true
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "바람이 이끄는 곳에서.*"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: "tmp/store-captures/real-jeju/ko/01-home"
+
+- tapOn:
+    point: "30%,92%"
+- waitForAnimationToEnd
+- assertVisible: "발견"
+- waitForAnimationToEnd
+- takeScreenshot: "tmp/store-captures/real-jeju/ko/02-discover"
+- tapOn:
+    point: "91%,43%"
+
+- tapOn:
+    point: "50%,92%"
+- waitForAnimationToEnd
+- assertVisible: "제주 지도"
+- waitForAnimationToEnd
+- takeScreenshot: "tmp/store-captures/real-jeju/ko/03-map"
+
+- tapOn:
+    point: "70%,92%"
+- waitForAnimationToEnd
+- assertVisible: "가보고 싶은 곳"
+- waitForAnimationToEnd
+- takeScreenshot: "tmp/store-captures/real-jeju/ko/04-saved"
+
+- tapOn:
+    point: "90%,92%"
+- waitForAnimationToEnd
+- assertVisible: "제주 문화"
+- waitForAnimationToEnd
+- takeScreenshot: "tmp/store-captures/real-jeju/ko/05-more"

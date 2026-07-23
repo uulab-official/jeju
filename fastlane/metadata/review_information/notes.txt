@@ -1,0 +1,5 @@
+Sorang Jeju does not require an account or login.
+
+Home provides seasonal recommendations, activity and themed travel guide entry points, and Jeju history and cultural resources. Discover filters curated destinations by theme. Map displays destination markers through Naver Maps when network access is available. Saved stores selected destinations and Jeju words locally on the device. More provides Jeju history, Jeju language search, orthography, notification settings, FAQ, privacy policy, terms, and app information.
+
+The app does not scrape or republish third-party reviews. Destination screens link to clearly identified official tourism sources. Jeju language content comes from the Jeju Special Self-Governing Province OpenAPI and is cached locally after the first successful load.

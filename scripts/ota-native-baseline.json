@@ -1,0 +1,27 @@
+{
+  "runtimeVersion": "1.0.0",
+  "buildCode": "26072301",
+  "verifiedArtifacts": {
+    "iosSha256": "47a9baf325e469d1a51b36cff800e55477d0ffc5ad8db4ab0ca0012c15c6de4b",
+    "androidSha256": "efa69b9300b33e867e5a11157d28ac25af476c34cd24f4bc0eb4581671e9623b"
+  },
+  "packageNativeConfigSha256": "925168f036310884ab11192899d01f3d62be36c78f1c6b9e11cb750474daa653",
+  "absentPrefixes": [
+    "android/",
+    "ios/"
+  ],
+  "files": {
+    "app.base.json": "87e3511572e1f42d9afdf6854cd5439a646ccad4b4b081358f95e569223df95e",
+    "app.config.js": "a805f6a9e75ec676ecd582b60e0492f44781f35bdbacb0223269af4a9d9549f0",
+    "eas.json": "2abb0e4241e16f5cdc8145f40f02f717d429d4938915071a0d95612b5b53b8c5",
+    "package-lock.json": "a279e89fcad484fbcad5a519f38ae41446f6fded9dc017ffaaff8752542907ac",
+    "plugins/with-naver-map-maven.cjs": "fb99a636b891b323fdbac2ecac6133d38ad4375febfb0ac4736be53578f30aaf",
+    "assets/images/icon.png": "7d86be0a8332259d035f7b9b6e27d54bfc5270ae1132870c93618978f9169cb7",
+    "assets/images/android-icon-background.png": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d",
+    "assets/images/android-icon-foreground.png": "2e71063ede8384772c09acdd8313c30e3093e9b1035f9aa08f027d1229d9287d",
+    "assets/images/android-icon-monochrome.png": "6371fc2c12e33ad2215a86c281db3d682a81bebe7c957a842c13b8bf00cceb83",
+    "assets/images/splash-mark.png": "2e71063ede8384772c09acdd8313c30e3093e9b1035f9aa08f027d1229d9287d",
+    "assets/images/splash-icon.png": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
+    "assets/images/favicon.png": "a4e030697a7571b3e95d31860e4da55d2f98e5e861e2b55e414f45a8556828ba"
+  }
+}

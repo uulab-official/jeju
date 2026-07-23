@@ -1,0 +1,8 @@
+git_url("https://github.com/uulab-official/certificates.git")
+storage_mode("git")
+type("appstore")
+app_identifier(["kr.co.uulab.jeju"])
+username("bonjin.app@gmail.com")
+team_id("N99FMBQ662")
+readonly(false)
+clone_branch_directly(true)

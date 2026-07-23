@@ -1,0 +1,46 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "info": {
+      "ko": {
+        "title": "소랑제주 & 제주여행·지도·제주어",
+        "subtitle": "명소·문화·제주의 말을 한곳에",
+        "promotionalText": "액티비티와 테마 여행 가이드부터 제주 역사·지도·제주어까지, 섬을 더 깊이 만나보세요.",
+        "description": "여행지부터 제주의 역사, 말과 문화까지 섬을 더 깊이 만나는 소랑제주입니다. 소랑은 제주어로 사랑을 뜻합니다.\n\n제주의 여행지와 액티비티를 주제별로 발견하고, 공식 관광정보를 엮은 테마 여행 가이드로 하루를 계획해 보세요. 탐라부터 제주4·3과 평화까지 시대 이야기와 관련 장소도 함께 만날 수 있습니다. 지도에서 위치를 살펴보고 가보고 싶은 장소와 기억하고 싶은 제주어를 함께 저장할 수 있습니다.\n\n주요 기능\n- 자연·바다·걷기·문화·시장·섬·액티비티 발견\n- 동쪽 하루·액티비티·비 오는 날·노을 테마 여행 가이드\n- 탐라·고려·조선·제주4·3을 잇는 제주 역사 시간선과 공식 출처\n- 장소별 여행 팁, 공식 관광정보 출처, 지도 연결\n- 여행지와 제주어 저장\n- 네 종류의 제주어 공개 자료 통합 검색\n- 제주어 목록·상세·발음·표기법과 오프라인 캐시\n- 제주 소식 알림과 시스템·라이트·다크 화면 테마\n\n관광정보 출처: 한국관광공사 TourAPI, 비짓제주\n역사 자료 출처: 국립제주박물관, 국가유산포털, 제주4·3평화재단\n제주어 자료 출처: 제주특별자치도 제주어 OpenAPI",
+        "keywords": ["제주여행", "제주지도", "제주관광", "제주어", "제주문화"],
+        "releaseNotes": "소랑제주를 시작합니다. 액티비티와 테마 여행 가이드, 지도, 저장, 제주어 검색과 문화 자료를 한곳에서 제공합니다.",
+        "marketingUrl": "https://uulab.co.kr",
+        "supportUrl": "https://uulab.co.kr",
+        "privacyPolicyUrl": "https://uulab.co.kr/privacy"
+      },
+      "en-US": {
+        "title": "Sorang Jeju & Travel Guide",
+        "subtitle": "Travel, culture and language",
+        "promotionalText": "Discover Jeju activities, themed travel guides, maps, culture, and language in one place.",
+        "description": "Sorang Jeju brings Jeju activities, destinations, maps, culture, and language together in one app. Sorang means love in the Jeju language.\n\nExplore places and activities by theme, then use travel guides built from official tourism information to shape your day. View locations, open official sources, and save destinations for later.\n\nKey features\n- Discover nature, beaches, walks, culture, markets, islands, and activities\n- Themed guides for eastern Jeju, active trips, rainy days, and sunsets\n- Place highlights, official sources, and map links\n- Save destinations and Jeju words\n- Unified search across four public Jeju language datasets\n- Meanings, pronunciation, orthography, and offline cache\n\nTourism sources: Korea Tourism Organization TourAPI and Visit Jeju\nLanguage source: Jeju Special Self-Governing Province OpenAPI",
+        "keywords": ["Jeju", "travel", "map", "culture", "dialect"],
+        "releaseNotes": "Introducing Sorang Jeju with activities, themed travel guides, maps, saved places, and Jeju language and culture resources.",
+        "marketingUrl": "https://uulab.co.kr",
+        "supportUrl": "https://uulab.co.kr",
+        "privacyPolicyUrl": "https://uulab.co.kr/privacy"
+      }
+    },
+    "categories": ["TRAVEL", "EDUCATION"]
+  },
+  "google": {
+    "info": {
+      "ko-KR": {
+        "title": "소랑제주 & 제주여행·지도·제주어",
+        "shortDescription": "액티비티·여행 가이드·지도·제주어로 섬을 더 깊이 만나요.",
+        "fullDescription": "여행지부터 제주의 역사, 말과 문화까지 섬을 더 깊이 만나는 소랑제주입니다. 소랑은 제주어로 사랑을 뜻합니다.\n\n제주의 여행지와 액티비티를 주제별로 발견하고, 공식 관광정보를 엮은 테마 여행 가이드로 하루를 계획해 보세요. 탐라부터 제주4·3과 평화까지 시대 이야기와 관련 장소도 함께 만날 수 있습니다. 지도에서 위치를 살펴보고 가보고 싶은 장소와 기억하고 싶은 제주어를 함께 저장할 수 있습니다.\n\n주요 기능\n- 자연·바다·걷기·문화·시장·섬·액티비티 발견\n- 동쪽 하루·액티비티·비 오는 날·노을 테마 여행 가이드\n- 탐라·고려·조선·제주4·3을 잇는 제주 역사 시간선과 공식 출처\n- 장소별 여행 팁, 공식 관광정보 출처, 지도 연결\n- 여행지와 제주어 저장\n- 네 종류의 제주어 공개 자료 통합 검색\n- 제주어 목록·상세·발음·표기법과 오프라인 캐시\n- 제주 소식 알림과 시스템·라이트·다크 화면 테마\n\n관광정보 출처: 한국관광공사 TourAPI, 비짓제주\n역사 자료 출처: 국립제주박물관, 국가유산포털, 제주4·3평화재단\n제주어 자료 출처: 제주특별자치도 제주어 OpenAPI",
+        "video": ""
+      },
+      "en-US": {
+        "title": "Sorang Jeju & Travel Guide",
+        "shortDescription": "Discover Jeju activities, travel guides, maps, culture, and language.",
+        "fullDescription": "Sorang Jeju brings Jeju activities, destinations, maps, culture, and language together in one app. Sorang means love in the Jeju language.\n\nExplore places and activities by theme, then use travel guides built from official tourism information to shape your day. View locations, open official sources, and save destinations for later.\n\nKey features\n- Discover nature, beaches, walks, culture, markets, islands, and activities\n- Themed guides for eastern Jeju, active trips, rainy days, and sunsets\n- Place highlights, official sources, and map links\n- Save destinations and Jeju words\n- Unified search across four public Jeju language datasets\n- Meanings, pronunciation, orthography, and offline cache\n\nTourism sources: Korea Tourism Organization TourAPI and Visit Jeju\nLanguage source: Jeju Special Self-Governing Province OpenAPI",
+        "video": ""
+      }
+    }
+  }
+}

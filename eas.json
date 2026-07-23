@@ -1,0 +1,82 @@
+{
+  "cli": {
+    "version": ">= 18.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "production",
+      "autoIncrement": false,
+      "ios": {
+        "resourceClass": "m-medium",
+        "simulator": true,
+        "credentialsSource": "local"
+      },
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "local"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "production",
+      "ios": {
+        "resourceClass": "m-medium",
+        "credentialsSource": "local"
+      },
+      "android": {
+        "buildType": "apk",
+        "credentialsSource": "local"
+      }
+    },
+    "screenshot": {
+      "distribution": "internal",
+      "channel": "production",
+      "autoIncrement": false,
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "autoIncrement": false,
+      "ios": {
+        "resourceClass": "m-medium",
+        "credentialsSource": "local"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "local"
+      }
+    },
+    "production-local": {
+      "channel": "production",
+      "autoIncrement": false,
+      "ios": {
+        "resourceClass": "m-medium",
+        "credentialsSource": "local"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "credentialsSource": "local"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "bonjin.app@gmail.com",
+        "appleTeamId": "N99FMBQ662",
+        "ascAppId": "6793418676"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}

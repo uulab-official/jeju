@@ -1,0 +1,101 @@
+{
+  "expo": {
+    "name": "소랑제주",
+    "slug": "jeju",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "jeju",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFCF7",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "NEVER",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/4674ac32-4c72-4f37-b339-51f4037870a3"
+    },
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "kr.co.uulab.jeju",
+      "buildNumber": "26072301",
+      "supportsTablet": false,
+      "entitlements": {
+        "aps-environment": "production"
+      },
+      "infoPlist": {
+        "CFBundleDisplayName": "소랑제주",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "kr.co.uulab.jeju",
+      "versionCode": 26072301,
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF3C4",
+        "foregroundImage": "./assets/images/splash-mark.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": []
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "./plugins/with-naver-map-maven.cjs",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-mark.png",
+          "imageWidth": 96,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFCF7"
+        }
+      ],
+      "expo-asset",
+      "expo-updates",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#E87924",
+          "defaultChannel": "jeju-news"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4674ac32-4c72-4f37-b339-51f4037870a3"
+      }
+    },
+    "owner": "uulab"
+  }
+}

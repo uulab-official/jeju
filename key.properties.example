@@ -1,0 +1,7 @@
+# Copy this file to key.properties locally.
+# Never commit the real key.properties file because it contains signing passwords.
+
+storeFile=credentials/<app-slug>-release.jks
+storePassword=<local-only>
+keyAlias=<app-slug>
+keyPassword=<local-only>

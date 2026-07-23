@@ -1,0 +1,654 @@
+{
+    "projectId": "6a615d4e00392e50bbd8",
+    "endpoint": "https://appwrite.uulab.co.kr/v1",
+    "functions": [
+        {
+            "$id": "collect-jeju-tourism",
+            "name": "collect-jeju-tourism",
+            "runtime": "node-18.0",
+            "path": "functions/collect-jeju-tourism",
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "schedule": "30 2 * * *",
+            "timeout": 900,
+            "enabled": true,
+            "logging": true,
+            "execute": [],
+            "scopes": [
+                "rows.read",
+                "rows.write"
+            ],
+            "deploymentRetention": 3
+        },
+        {
+            "$id": "collect-jeju-culture",
+            "name": "collect-jeju-culture",
+            "runtime": "node-18.0",
+            "path": "functions/collect-jeju-culture",
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "schedule": "0 3 * * *",
+            "timeout": 900,
+            "enabled": true,
+            "logging": true,
+            "execute": [],
+            "scopes": [
+                "rows.read",
+                "rows.write"
+            ],
+            "deploymentRetention": 3
+        },
+        {
+            "$id": "register-push-installation",
+            "name": "register-push-installation",
+            "runtime": "node-18.0",
+            "path": "functions/register-push-installation",
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "timeout": 15,
+            "enabled": true,
+            "logging": true,
+            "execute": [
+                "any"
+            ],
+            "scopes": [
+                "rows.read",
+                "rows.write"
+            ],
+            "deploymentRetention": 3
+        }
+    ],
+    "tablesDB": [
+        {
+            "$id": "jeju",
+            "name": "소랑제주",
+            "enabled": true
+        }
+    ],
+    "tables": [
+        {
+            "$id": "places",
+            "$permissions": [
+                "read(\"any\")"
+            ],
+            "databaseId": "jeju",
+            "name": "제주 공식 관광정보",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "externalId",
+                    "type": "varchar",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "source",
+                    "type": "varchar",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "contentTypeId",
+                    "type": "integer",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "name",
+                    "type": "varchar",
+                    "size": 255,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "category",
+                    "type": "varchar",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "categoryLabel",
+                    "type": "varchar",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "region",
+                    "type": "varchar",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "area",
+                    "type": "varchar",
+                    "size": 96,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "address",
+                    "type": "varchar",
+                    "size": 768,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "summary",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "highlight",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "latitude",
+                    "type": "double",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "longitude",
+                    "type": "double",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "tags",
+                    "type": "varchar",
+                    "size": 80,
+                    "required": false,
+                    "array": true
+                },
+                {
+                    "key": "phone",
+                    "type": "varchar",
+                    "size": 160,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "homepage",
+                    "type": "string",
+                    "format": "url",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "openingHours",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "restDate",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "parking",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "heroImageUrl",
+                    "type": "string",
+                    "format": "url",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "imagesJson",
+                    "type": "mediumtext",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "sourceName",
+                    "type": "varchar",
+                    "size": 160,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "sourceUrl",
+                    "type": "string",
+                    "format": "url",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "sourceLicense",
+                    "type": "varchar",
+                    "size": 768,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "accentStart",
+                    "type": "varchar",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "accentEnd",
+                    "type": "varchar",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "modifiedAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "collectedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "retiredAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_places_external",
+                    "type": "unique",
+                    "columns": [
+                        "externalId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_places_active_category",
+                    "type": "key",
+                    "columns": [
+                        "active",
+                        "category"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_places_region",
+                    "type": "key",
+                    "columns": [
+                        "region"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_places_name",
+                    "type": "fulltext",
+                    "columns": [
+                        "name"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "culture_items",
+            "$permissions": [
+                "read(\"any\")"
+            ],
+            "databaseId": "jeju",
+            "name": "제주어 공공데이터",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "externalId",
+                    "type": "varchar",
+                    "size": 80,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "kind",
+                    "type": "varchar",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "title",
+                    "type": "varchar",
+                    "size": 255,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "subtitle",
+                    "type": "varchar",
+                    "size": 512,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "body",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "category",
+                    "type": "varchar",
+                    "size": 160,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "imageUrl",
+                    "type": "string",
+                    "format": "url",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "audioUrl",
+                    "type": "string",
+                    "format": "url",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "fieldsJson",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "searchText",
+                    "type": "text",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "source",
+                    "type": "varchar",
+                    "size": 80,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "sourceName",
+                    "type": "varchar",
+                    "size": 160,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "sourceUrl",
+                    "type": "string",
+                    "format": "url",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "collectedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "retiredAt",
+                    "type": "datetime",
+                    "required": false,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_culture_external",
+                    "type": "unique",
+                    "columns": [
+                        "kind",
+                        "externalId"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_culture_active_kind",
+                    "type": "key",
+                    "columns": [
+                        "active",
+                        "kind"
+                    ],
+                    "orders": [
+                        "ASC",
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_culture_search",
+                    "type": "fulltext",
+                    "columns": [
+                        "searchText"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "push_installations",
+            "$permissions": [],
+            "databaseId": "jeju",
+            "name": "Expo Push 설치",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "installationId",
+                    "type": "varchar",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "expoPushToken",
+                    "type": "varchar",
+                    "size": 255,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "platform",
+                    "type": "varchar",
+                    "size": 16,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "appVersion",
+                    "type": "varchar",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "projectId",
+                    "type": "varchar",
+                    "size": 64,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "active",
+                    "type": "boolean",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "createdAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "updatedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_push_installation",
+                    "type": "unique",
+                    "columns": [
+                        "installationId"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_push_active",
+                    "type": "key",
+                    "columns": [
+                        "active"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_push_token",
+                    "type": "key",
+                    "columns": [
+                        "expoPushToken"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                }
+            ]
+        },
+        {
+            "$id": "sync_runs",
+            "databaseId": "jeju",
+            "name": "공공데이터 수집 상태",
+            "enabled": true,
+            "rowSecurity": false,
+            "columns": [
+                {
+                    "key": "runId",
+                    "type": "varchar",
+                    "size": 80,
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "source",
+                    "type": "varchar",
+                    "size": 80,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "status",
+                    "type": "varchar",
+                    "size": 32,
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "processedCount",
+                    "type": "integer",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "failedCount",
+                    "type": "integer",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "startedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "finishedAt",
+                    "type": "datetime",
+                    "required": true,
+                    "array": false
+                },
+                {
+                    "key": "message",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                },
+                {
+                    "key": "checkpointJson",
+                    "type": "text",
+                    "required": false,
+                    "array": false
+                }
+            ],
+            "indexes": [
+                {
+                    "key": "idx_sync_source",
+                    "type": "key",
+                    "columns": [
+                        "source"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
+                },
+                {
+                    "key": "idx_sync_finished",
+                    "type": "key",
+                    "columns": [
+                        "finishedAt"
+                    ],
+                    "orders": [
+                        "DESC"
+                    ]
+                }
+            ]
+        }
+    ]
+}

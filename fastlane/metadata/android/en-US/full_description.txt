@@ -1,0 +1,17 @@
+Sorang Jeju brings Jeju activities, destinations, maps, history, culture, and language together in one app. Sorang means love in the Jeju language.
+
+Explore places and activities by theme, use guides built from official tourism sources to shape your day, and save destinations for later. Follow a concise history timeline from Tamna through Jeju 4·3 and peace. The app also includes everyday dialect, proverbs, dictionaries, indexed reference words, and the Jeju orthography guide.
+
+Key features
+- Discover nature, beaches, walks, culture, markets, islands, and activities
+- Themed guides for eastern Jeju, active trips, rainy days, and sunsets
+- Jeju history timeline with official sources
+- Place highlights, official sources, and map links
+- Save destinations and Jeju words
+- Unified search across four public Jeju language datasets
+- Meanings, pronunciation, orthography, and offline cache
+- Jeju news notifications and system, light, and dark themes
+
+Tourism sources: Korea Tourism Organization TourAPI and Visit Jeju
+History sources: National Museum of Jeju, Heritage Portal, and Jeju 4·3 Peace Foundation
+Language source: Jeju Special Self-Governing Province OpenAPI

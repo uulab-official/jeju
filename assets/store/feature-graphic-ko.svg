@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF7E6"/>
+      <stop offset="1" stop-color="#FCE4C7"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B8E1DC"/>
+      <stop offset="1" stop-color="#77C8C3"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#153F3A" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="500" rx="0" fill="url(#bg)"/>
+  <circle cx="858" cy="92" r="55" fill="#F5A65B"/>
+  <path d="M690 330c35-57 76-104 127-141 25-18 53-21 77-8 31 17 52 51 67 100l63 219H633z" fill="url(#sea)" opacity=".72"/>
+  <path d="M641 359c52-19 94-39 126-61 35-23 69-29 103-17 41 14 84 46 130 96v123H617z" fill="#5AAEA9" opacity=".72"/>
+  <g filter="url(#shadow)">
+    <path d="M628 320c25-18 50-33 75-44 46-21 100-25 159-11 39 9 73 26 104 52-32 20-69 34-112 43-78 16-153 3-226-40z" fill="#1E5E57"/>
+    <path d="M749 286c15-29 36-54 62-76 26 21 48 47 66 78-39-9-82-10-128-2z" fill="#F2B157"/>
+  </g>
+  <g fill="#1B413C" font-family="'Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif">
+    <text x="72" y="118" font-size="26" font-weight="700" letter-spacing="3">JEJU TRAVEL GUIDE</text>
+    <text x="68" y="228" font-size="78" font-weight="800">소랑제주</text>
+    <text x="72" y="286" font-size="31" font-weight="600">여행 · 지도 · 제주어 · 문화</text>
+  </g>
+  <g transform="translate(72 338)">
+    <rect width="158" height="54" rx="27" fill="#E9783D"/>
+    <text x="79" y="36" text-anchor="middle" fill="#fff" font-size="23" font-weight="700" font-family="'Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif">제주 발견</text>
+    <rect x="174" width="158" height="54" rx="27" fill="#FFFFFF" opacity=".82"/>
+    <text x="253" y="36" text-anchor="middle" fill="#1E5E57" font-size="23" font-weight="700" font-family="'Apple SD Gothic Neo','Noto Sans CJK KR',sans-serif">여행 저장</text>
+  </g>
+</svg>
