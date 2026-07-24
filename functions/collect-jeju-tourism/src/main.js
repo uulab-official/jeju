@@ -9,6 +9,7 @@ const FETCH_RETRIES = Math.max(1, Number(process.env.TOUR_API_RETRIES || 3));
 const RETRY_BASE_DELAY_MS = Math.max(100, Number(process.env.TOUR_API_RETRY_DELAY_MS || 500));
 const PAGE_SIZE = 100;
 const MAX_ITEMS = Math.max(1, Number(process.env.TOUR_API_MAX_ITEMS || 300));
+const MAX_SYNC_ITEMS = Math.max(1, Math.min(900, Number(process.env.TOUR_API_MAX_SYNC_ITEMS || 900)));
 const MIN_ITEMS = Math.max(1, Number(process.env.TOUR_API_MIN_ITEMS || 1));
 const DETAIL_CONCURRENCY = 6;
 const WRITE_CONCURRENCY = 10;
@@ -20,8 +21,9 @@ export default async function collectJejuTourism({ req, res, log, error }) {
   const startedAt = new Date();
   const config = appwriteConfig(req);
   const serviceKey = process.env.TOUR_API_SERVICE_KEY || process.env.DATA_GO_KR_SERVICE_KEY;
+  const request = requestBody(req);
 
-  if (isSmokeRequest(req)) {
+  if (request.smoke) {
     return res.json({ ok: true, smoke: true, source: SOURCE, databaseId: config.databaseId });
   }
 
@@ -30,15 +32,35 @@ export default async function collectJejuTourism({ req, res, log, error }) {
 
   let processed = 0;
   let failed = 0;
+  let deactivated = 0;
+  let skipped = 0;
 
   try {
-    const baseItems = await fetchJejuItems(serviceKey, log);
-    if (baseItems.length < MIN_ITEMS) {
-      throw new Error(`TourAPI returned too few places (${baseItems.length}; minimum ${MIN_ITEMS}). Existing Appwrite data was preserved.`);
+    const checkpoint = request.full ? null : await resolveCheckpoint(config, startedAt);
+    const mode = checkpoint ? 'incremental' : 'full';
+    const fetchedItems = mode === 'full'
+      ? await fetchJejuItems(serviceKey, log)
+      : await fetchJejuChanges(serviceKey, checkpoint.modifiedDate, log);
+    if (mode === 'full' && fetchedItems.length < MIN_ITEMS) {
+      throw new Error(`TourAPI returned too few places (${fetchedItems.length}; minimum ${MIN_ITEMS}). Existing Appwrite data was preserved.`);
     }
-    log(`TourAPI 제주 기본정보 ${baseItems.length}건 수집`);
+    log(`TourAPI 제주 ${mode === 'full' ? '기본정보' : '변경정보'} ${fetchedItems.length}건 수집`);
 
-    const enriched = await mapLimit(baseItems, DETAIL_CONCURRENCY, async (item) => {
+    const visibleItems = [];
+    for (const item of fetchedItems) {
+      if (String(item.showflag ?? '1') === '0') {
+        deactivated += await deactivateChangedPlace(config, item, startedAt);
+        continue;
+      }
+      deactivated += await deactivatePreviousContentId(config, item, startedAt);
+      if (mode === 'incremental' && await isCurrentPlaceUnchanged(config, item)) {
+        skipped += 1;
+        continue;
+      }
+      visibleItems.push(item);
+    }
+
+    const enriched = await mapLimit(visibleItems, DETAIL_CONCURRENCY, async (item) => {
       try {
         const [common, intro, imageItems] = await Promise.all([
           fetchDetailCommon(serviceKey, item.contentid),
@@ -52,7 +74,7 @@ export default async function collectJejuTourism({ req, res, log, error }) {
       }
     });
     const validPlaces = enriched.filter(Boolean);
-    if (validPlaces.length < MIN_ITEMS) {
+    if (visibleItems.length && validPlaces.length < MIN_ITEMS) {
       throw new Error(`TourAPI returned no valid places (${validPlaces.length}; minimum ${MIN_ITEMS}). Existing Appwrite data was preserved.`);
     }
 
@@ -66,21 +88,30 @@ export default async function collectJejuTourism({ req, res, log, error }) {
       }
     });
 
-    let retired = 0;
-    if (DEACTIVATE_STALE) {
+    if (mode === 'full' && DEACTIVATE_STALE) {
       try {
-        retired = await deactivateStalePlaces(config, new Set(validPlaces.map((place) => place.rowId)), startedAt, log);
+        deactivated += await deactivateStalePlaces(config, new Set(validPlaces.map((place) => place.rowId)), startedAt, log);
       } catch (cause) {
         failed += 1;
         error(`오래된 장소 비활성화 실패: ${cause.message}`);
       }
     }
 
+    const nextCheckpoint = {
+      modifiedDate: koreaDate(startedAt),
+      collectedAt: startedAt.toISOString(),
+      mode,
+    };
+    const persistedCheckpoint = failed ? checkpoint : nextCheckpoint;
     await upsertSyncRun(config, {
       status: failed ? 'partial' : 'completed', processed, failed, startedAt,
-      message: `TourAPI ${baseItems.length}건 조회, ${processed}건 저장, ${retired}건 비활성화`,
+      message: `TourAPI ${mode} ${fetchedItems.length}건 조회, ${processed}건 저장, ${deactivated}건 비활성화, ${skipped}건 변경 없음`,
+      checkpoint: persistedCheckpoint,
     });
-    return res.json({ ok: failed === 0, source: SOURCE, fetched: baseItems.length, processed, failed });
+    return res.json({
+      ok: failed === 0, source: SOURCE, mode, fetched: fetchedItems.length,
+      processed, deactivated, skipped, failed, checkpoint: persistedCheckpoint?.modifiedDate || null,
+    });
   } catch (cause) {
     await upsertSyncRun(config, {
       status: cause.code === 'TOUR_API_AUTH' ? 'auth_error' : 'failed',
@@ -109,6 +140,29 @@ async function fetchJejuItems(serviceKey, log) {
     if (!page.length || items.length >= Number(body.totalCount || 0)) break;
   }
   return items.slice(0, MAX_ITEMS);
+}
+
+async function fetchJejuChanges(serviceKey, modifiedDate, log) {
+  const items = [];
+  for (let pageNo = 1; items.length < MAX_SYNC_ITEMS; pageNo += 1) {
+    const payload = await tourApi(serviceKey, 'areaBasedSyncList2', {
+      lDongRegnCd: 50,
+      modifiedtime: modifiedDate,
+      pageNo,
+      numOfRows: Math.min(PAGE_SIZE, MAX_SYNC_ITEMS - items.length),
+      arrange: 'C',
+    });
+    const body = payload?.response?.body || {};
+    const page = normalizeItems(body?.items?.item);
+    items.push(...page);
+    log(`TourAPI sync page ${pageNo}: ${page.length}건`);
+    const total = Number(body.totalCount || 0);
+    if (!page.length || items.length >= total) break;
+    if (items.length >= MAX_SYNC_ITEMS) {
+      throw new Error(`TourAPI sync changes exceeded the safe daily limit (${MAX_SYNC_ITEMS}/${total}). Checkpoint was preserved.`);
+    }
+  }
+  return [...new Map(items.map((item) => [String(item.contentid || item.oldContentid), item])).values()];
 }
 
 async function fetchDetailCommon(serviceKey, contentId) {
@@ -336,14 +390,86 @@ async function updateRow(config, tableId, rowId, data) {
   return response.json();
 }
 
-async function listRows(config, tableId, queries, offset) {
-  const params = new URLSearchParams({ limit: String(STALE_SCAN_PAGE_SIZE), offset: String(offset), total: 'false' });
+async function getRow(config, tableId, rowId) {
+  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, {
+    headers: { 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
+  return response.json();
+}
+
+async function listRows(config, tableId, queries, offset, limit = STALE_SCAN_PAGE_SIZE) {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset), total: 'false' });
   queries.forEach((query) => params.append('queries[]', query));
   const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows?${params.toString()}`, {
     headers: { 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
   });
   if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
   return response.json();
+}
+
+async function resolveCheckpoint(config, startedAt) {
+  const payload = await listRows(config, SYNC_TABLE_ID, [
+    JSON.stringify({ method: 'equal', attribute: 'source', values: [SOURCE] }),
+    JSON.stringify({ method: 'orderDesc', attribute: 'finishedAt', values: [] }),
+  ], 0, 100);
+  const rows = Array.isArray(payload.rows) ? payload.rows : [];
+  for (const raw of rows) {
+    const row = raw.data || raw;
+    if (!['completed', 'partial'].includes(String(row.status))) continue;
+    try {
+      const checkpoint = JSON.parse(String(row.checkpointJson || ''));
+      if (/^\d{8}$/.test(checkpoint.modifiedDate)) return checkpoint;
+    } catch {
+      // Older runs did not persist a tourism checkpoint.
+    }
+  }
+
+  const places = await listRows(config, PLACES_TABLE_ID, [
+    JSON.stringify({ method: 'equal', attribute: 'source', values: [SOURCE] }),
+  ], 0, 1);
+  if (Array.isArray(places.rows) && places.rows.length) {
+    return {
+      modifiedDate: koreaDate(new Date(startedAt.getTime() - 24 * 60 * 60 * 1000)),
+      collectedAt: startedAt.toISOString(),
+      mode: 'bootstrap',
+    };
+  }
+  return null;
+}
+
+async function isCurrentPlaceUnchanged(config, item) {
+  const contentId = clean(item.contentid);
+  if (!contentId) return false;
+  const row = await getRow(config, PLACES_TABLE_ID, `tour-${contentId}`);
+  if (!row) return false;
+  const data = row.data || row;
+  const incomingModifiedAt = tourDate(item.modifiedtime);
+  if (!incomingModifiedAt || !data.modifiedAt) return false;
+  return data.active !== false && Date.parse(data.modifiedAt) === Date.parse(incomingModifiedAt);
+}
+
+async function deactivateChangedPlace(config, item, retiredAt) {
+  const ids = [...new Set([clean(item.contentid), clean(item.oldContentid)].filter(Boolean))];
+  let changed = 0;
+  for (const contentId of ids) {
+    const rowId = `tour-${contentId}`;
+    const row = await getRow(config, PLACES_TABLE_ID, rowId);
+    if (!row) continue;
+    const data = row.data || row;
+    if (data.active === false) continue;
+    await updateRow(config, PLACES_TABLE_ID, rowId, { active: false, retiredAt: retiredAt.toISOString() });
+    changed += 1;
+  }
+  return changed;
+}
+
+async function deactivatePreviousContentId(config, item, retiredAt) {
+  const oldContentId = clean(item.oldContentid);
+  const contentId = clean(item.contentid);
+  if (!oldContentId || oldContentId === contentId) return 0;
+  return deactivateChangedPlace(config, { contentid: oldContentId }, retiredAt);
 }
 
 async function deactivateStalePlaces(config, currentRowIds, retiredAt, log) {
@@ -365,11 +491,12 @@ async function deactivateStalePlaces(config, currentRowIds, retiredAt, log) {
   return stale.length;
 }
 
-async function upsertSyncRun(config, { status, processed, failed, startedAt, message }) {
+async function upsertSyncRun(config, { status, processed, failed, startedAt, message, checkpoint }) {
   const runId = `sync-${startedAt.getTime()}`;
   return upsertRow(config, SYNC_TABLE_ID, runId, {
     runId, source: SOURCE, status, processedCount: processed, failedCount: failed,
     startedAt: startedAt.toISOString(), finishedAt: new Date().toISOString(), message: String(message || '').slice(0, 8000),
+    checkpointJson: checkpoint ? JSON.stringify(checkpoint) : '',
   });
 }
 
@@ -418,11 +545,18 @@ function withoutNulls(value) {
   return Object.fromEntries(Object.entries(value).filter(([, item]) => item !== null && item !== undefined && item !== ''));
 }
 
-function isSmokeRequest(req) {
+function koreaDate(date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}${value.month}${value.day}`;
+}
+
+function requestBody(req) {
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
-    return Boolean(body.smoke);
+    return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
   } catch {
-    return false;
+    return {};
   }
 }

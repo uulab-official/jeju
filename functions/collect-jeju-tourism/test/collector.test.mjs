@@ -53,7 +53,7 @@ test('TourAPI 장소와 여러 이미지 메타데이터를 Appwrite row로 정�
 
   try {
     const result = await collect({
-      req: { headers: { 'x-appwrite-key': 'dynamic-key' }, body: '{}' },
+      req: { headers: { 'x-appwrite-key': 'dynamic-key' }, body: '{"full":true}' },
       res: { json: (payload, status = 200) => ({ payload, status }) },
       log: () => {},
       error: () => {},
@@ -106,7 +106,7 @@ test('TourAPI가 빈 목록을 반환하면 장소를 덮어쓰지 않고 실패
 
   try {
     const result = await collect({
-      req: { headers: { 'x-appwrite-key': 'dynamic-key' }, body: '{}' },
+      req: { headers: { 'x-appwrite-key': 'dynamic-key' }, body: '{"full":true}' },
       res: { json: (payload, status = 200) => ({ payload, status }) },
       log: () => {},
       error: () => {},
@@ -117,6 +117,87 @@ test('TourAPI가 빈 목록을 반환하면 장소를 덮어쓰지 않고 실패
     assert.equal(writes.filter((write) => /\/tour-/.test(write.requestUrl)).length, 0);
     assert.equal(writes.filter((write) => write.body.data?.source === 'tourapi-kor-service2').length, 1);
     assert.equal(writes[0].body.data.status, 'failed');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('TourAPI 동기화 목록은 변경된 장소만 보강하고 비표출 장소를 비활성화한다', async () => {
+  const writes = [];
+  const requests = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, options = {}) => {
+    const requestUrl = String(input);
+    requests.push(requestUrl);
+    if (requestUrl.includes('/tables/sync_runs/rows?')) {
+      return json({ rows: [{
+        source: 'tourapi-kor-service2',
+        status: 'completed',
+        finishedAt: '2026-07-23T02:30:00.000Z',
+        checkpointJson: JSON.stringify({ modifiedDate: '20260723' }),
+      }] });
+    }
+    if (requestUrl.includes('/areaBasedSyncList2')) {
+      return json({ response: { header: { resultCode: '0000' }, body: { totalCount: 3, items: { item: [
+        {
+          contentid: '123', contenttypeid: '12', title: '변경 없는 오름', addr1: '제주특별자치도 제주시 애월읍',
+          mapx: '126.4', mapy: '33.4', modifiedtime: '20260723093000', showflag: '1',
+        },
+        {
+          contentid: '456', contenttypeid: '14', title: '새 문화시설', addr1: '제주특별자치도 서귀포시 중문동',
+          mapx: '126.5', mapy: '33.2', modifiedtime: '20260724090000', showflag: '1',
+        },
+        {
+          contentid: '789', contenttypeid: '28', title: '운영 종료 체험장',
+          modifiedtime: '20260724080000', showflag: '0',
+        },
+      ] } } } });
+    }
+    if (requestUrl.endsWith('/tour-123') && !options.method) {
+      return json({ $id: 'tour-123', active: true, modifiedAt: '2026-07-23T00:30:00.000Z' });
+    }
+    if (requestUrl.endsWith('/tour-456') && !options.method) return json({ message: 'Not found' }, 404);
+    if (requestUrl.endsWith('/tour-789') && !options.method) {
+      return json({ $id: 'tour-789', active: true, modifiedAt: '2026-07-20T00:00:00.000Z' });
+    }
+    if (requestUrl.includes('/detailCommon2')) {
+      return json({ response: { header: { resultCode: '0000' }, body: { items: { item: {
+        contentid: '456', contenttypeid: '14', title: '새 문화시설', addr1: '제주특별자치도 서귀포시 중문동',
+        mapx: '126.5', mapy: '33.2', modifiedtime: '20260724090000',
+      } } } } });
+    }
+    if (requestUrl.includes('/detailIntro2') || requestUrl.includes('/detailImage2')) {
+      return json({ response: { header: { resultCode: '0000' }, body: { items: {} } } });
+    }
+    if (requestUrl.includes('/tablesdb/') && ['PUT', 'PATCH'].includes(options.method)) {
+      writes.push({ requestUrl, method: options.method, body: JSON.parse(String(options.body || '{}')) });
+      return json({ $id: requestUrl.split('/').at(-1) });
+    }
+    throw new Error(`Unexpected request: ${requestUrl}`);
+  };
+
+  try {
+    const result = await collect({
+      req: { headers: { 'x-appwrite-key': 'dynamic-key' }, body: '{}' },
+      res: { json: (payload, status = 200) => ({ payload, status }) },
+      log: () => {},
+      error: () => {},
+    });
+
+    assert.equal(result.status, 200);
+    assert.equal(result.payload.mode, 'incremental');
+    assert.equal(result.payload.fetched, 3);
+    assert.equal(result.payload.processed, 1);
+    assert.equal(result.payload.deactivated, 1);
+    assert.equal(result.payload.skipped, 1);
+    assert.match(requests.find((url) => url.includes('/areaBasedSyncList2')), /modifiedtime=20260723/);
+    assert.equal(requests.some((url) => url.includes('/areaBasedList2')), false);
+    assert.equal(requests.filter((url) => url.includes('/detailCommon2')).length, 1);
+    assert.ok(writes.some((write) => write.requestUrl.endsWith('/tour-789') && write.body.data.active === false));
+    assert.ok(writes.some((write) => write.requestUrl.endsWith('/tour-456') && write.method === 'PUT'));
+    const syncWrite = writes.find((write) => write.requestUrl.includes('/tables/sync_runs/rows/'));
+    assert.equal(syncWrite?.body.data.status, 'completed');
+    assert.match(syncWrite?.body.data.checkpointJson, /"modifiedDate":"\d{8}"/);
   } finally {
     globalThis.fetch = originalFetch;
   }

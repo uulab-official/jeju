@@ -42,7 +42,7 @@ flowchart LR
 2. `appwrite client --endpoint https://appwrite.uulab.co.kr/v1 --project-id <PROJECT_ID>`로 대상을 확인한다.
 3. `npm run appwrite:push`로 테이블과 Function을 배포한다.
 4. Function 변수 `TOUR_API_SERVICE_KEY`를 등록한다.
-5. `{"smoke":true}` 실행으로 연결을 점검한 후 관광지는 `npm run appwrite:collect:tourism`, 제주어는 `npm run appwrite:collect`로 최초 수집한다.
+5. `{"smoke":true}` 실행으로 연결을 점검한 후 관광지는 `npm run appwrite:collect:tourism:full`, 제주어는 `npm run appwrite:collect`로 최초 수집한다. 관광지의 이후 수동 증분 실행은 `npm run appwrite:collect:tourism`을 사용한다.
 6. 앱 클라이언트의 endpoint와 project ID는 `src/lib/appwrite.ts`에 고정되어 있으며, 앱 시작 시 `client.ping()`으로 연결을 확인한다.
 
 ## 운영 자동 점검
@@ -53,6 +53,7 @@ flowchart LR
 - 원격 수집 Function에는 `TOUR_API_SERVICE_KEY`를 Secret 변수로 등록해야 한다. 이 값은 앱 번들·Git 저장소·CI 로그에 넣지 않는다.
 - 네트워크 오류는 두 수집 Function과 앱의 Appwrite 조회 모두 타임아웃·재시도·캐시 보존으로 처리한다. TourAPI나 제주어 수집 응답이 비정상적으로 0건(또는 최소 건수 미만)이면 기존 Appwrite 데이터를 보존하고 실패 기록만 남긴다.
 - 제주어 수집 Function은 최초 1회만 `page=1..n`, `pageSize=1000`으로 원천 응답을 나누고, 이후에는 `sync_runs.checkpointJson`의 마지막 `seq`보다 큰 신규 항목만 읽는다. 신규 항목이 없으면 리소스별 첫 페이지에서 멈추며, 각 페이지의 ID를 중복 제거하고 최대 100페이지 보호선을 둔다.
+- 관광정보 수집 Function은 최초 1회만 `areaBasedList2`로 기본 목록을 채웁니다. 이후에는 `areaBasedSyncList2`에 마지막 성공 체크포인트의 `modifiedtime`과 `lDongRegnCd=50`을 보내 신규·수정·비표출 항목만 읽습니다. 저장된 원천 수정일이 같으면 상세 API 호출을 생략하고, `showflag=0` 또는 `oldContentid`는 삭제 대신 비활성화로 반영합니다.
 - 앱의 제주어 `culture_items` 조회는 `$id` 커서 기반 20건 페이징을 사용한다. 검색은 Appwrite full-text 인덱스를 사용하고, 화면 끝에서 다음 20건만 추가한다.
 - 앱의 `places` 조회는 `$id` 커서 기반 100건 페이징을 사용해 큰 offset 스캔을 피하고, 최대 2,000건까지만 화면 캐시에 적재한다. 현재 수집 상한(`TOUR_API_MAX_ITEMS=300`)보다 충분히 큰 값이다.
 - 정상 수집 뒤 현재 응답에 없는 기존 TourAPI 장소는 삭제하지 않고 `active=false`, `retiredAt`로 비활성화한다. 다음 수집에서 다시 나타나면 upsert로 복구된다.

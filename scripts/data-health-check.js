@@ -49,6 +49,7 @@ async function main() {
     missing: 'TourAPI 장소 수집 결과가 없습니다.',
     auth: '최근 TourAPI 수집이 인증 거부되었습니다. 개발계정 키의 승인·활성화 상태를 확인하세요.',
     empty: '최근 TourAPI 수집이 성공 상태지만 저장된 장소가 0건입니다.',
+    allowEmpty: true,
   });
   checkSync(latestCulture, problems, {
     label: '제주어 문화',
@@ -56,6 +57,7 @@ async function main() {
     empty: '최근 제주어 문화 수집이 성공 상태지만 저장된 항목이 0건입니다.',
     allowEmpty: true,
   });
+  if (Number(places.total || 0) < 1) problems.push('places 테이블에 수집된 TourAPI 관광정보가 없습니다.');
   if (Number(cultureItems.total || 0) < 1) problems.push('culture_items 테이블에 수집된 제주어 데이터가 없습니다.');
 
   if (problems.length) {
