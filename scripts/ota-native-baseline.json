@@ -1,27 +1,27 @@
 {
   "runtimeVersion": "1.0.0",
-  "buildCode": "26072301",
+  "buildCode": "26072401",
   "verifiedArtifacts": {
-    "iosSha256": "47a9baf325e469d1a51b36cff800e55477d0ffc5ad8db4ab0ca0012c15c6de4b",
-    "androidSha256": "efa69b9300b33e867e5a11157d28ac25af476c34cd24f4bc0eb4581671e9623b"
+    "iosSha256": "4cf66682170cd685cb27c504c7aac4e04f620db1ff4e45ab13d6e202021e6567",
+    "androidSha256": "e71dbb24ed519620f1bde1b4fc7fb71790e4df748ce8f9292c07b3035927a7ce"
   },
-  "packageNativeConfigSha256": "925168f036310884ab11192899d01f3d62be36c78f1c6b9e11cb750474daa653",
+  "packageNativeConfigSha256": "7565dd245d8ef87c3e930803f12155a8cbd4037437f81a2e8ea3213941adb7cb",
   "absentPrefixes": [
     "android/",
     "ios/"
   ],
   "files": {
-    "app.base.json": "87e3511572e1f42d9afdf6854cd5439a646ccad4b4b081358f95e569223df95e",
+    "app.base.json": "043c7d26cdb5517cf8a28ec1cb8dc2ba3576cf27ff706a173b4f959936e02497",
     "app.config.js": "a805f6a9e75ec676ecd582b60e0492f44781f35bdbacb0223269af4a9d9549f0",
     "eas.json": "2abb0e4241e16f5cdc8145f40f02f717d429d4938915071a0d95612b5b53b8c5",
-    "package-lock.json": "a279e89fcad484fbcad5a519f38ae41446f6fded9dc017ffaaff8752542907ac",
+    "package-lock.json": "27698254a74c6a025547c0c12bf450d147bc0c8e3f0ac3270fa5e5f7051c556a",
     "plugins/with-naver-map-maven.cjs": "fb99a636b891b323fdbac2ecac6133d38ad4375febfb0ac4736be53578f30aaf",
-    "assets/images/icon.png": "7d86be0a8332259d035f7b9b6e27d54bfc5270ae1132870c93618978f9169cb7",
-    "assets/images/android-icon-background.png": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d",
-    "assets/images/android-icon-foreground.png": "2e71063ede8384772c09acdd8313c30e3093e9b1035f9aa08f027d1229d9287d",
-    "assets/images/android-icon-monochrome.png": "6371fc2c12e33ad2215a86c281db3d682a81bebe7c957a842c13b8bf00cceb83",
-    "assets/images/splash-mark.png": "2e71063ede8384772c09acdd8313c30e3093e9b1035f9aa08f027d1229d9287d",
-    "assets/images/splash-icon.png": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8",
-    "assets/images/favicon.png": "a4e030697a7571b3e95d31860e4da55d2f98e5e861e2b55e414f45a8556828ba"
+    "assets/images/icon.png": "01b7e34d1f5eac9df9113596533699ac73840416c515e09b67bb659e29bf70f0",
+    "assets/images/android-icon-background.png": "e3ac44cc8258fc90793b1ef5fb9aeacd3b50dbe0649830550a63998434007991",
+    "assets/images/android-icon-foreground.png": "d47009f10dc2b30bbb0d330381858f51ec1d7a226c0e6dfb774a1bd8460df713",
+    "assets/images/android-icon-monochrome.png": "556f0ee10f5dbaad634821e3c7b76e1b6edee4e5392cac126736110b8ad30a19",
+    "assets/images/splash-mark.png": "40f8db03c38ec4d8b8e6d8b8fdededba40dc476a13497024107757f107526a35",
+    "assets/images/splash-icon.png": "40f8db03c38ec4d8b8e6d8b8fdededba40dc476a13497024107757f107526a35",
+    "assets/images/favicon.png": "5660a4067941a24b03a1574ccd0f17fd0c67983b31fa6347d7254bc7b94b65e5"
   }
 }
