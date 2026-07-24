@@ -22,7 +22,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "kr.co.uulab.jeju",
-      "buildNumber": "26072301",
+      "buildNumber": "26072401",
       "supportsTablet": false,
       "entitlements": {
         "aps-environment": "production"
@@ -34,7 +34,7 @@
     },
     "android": {
       "package": "kr.co.uulab.jeju",
-      "versionCode": 26072301,
+      "versionCode": 26072401,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFF3C4",
