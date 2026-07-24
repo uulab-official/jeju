@@ -55,9 +55,14 @@ export default async function collectJejuCulture({ req, res, log, error }) {
       }
     });
 
-    const retired = Object.keys(checkpoint).length ? 0 : await deactivateStale(config, new Set(allRows.map((row) => row.rowId)), startedAt, error);
-    await upsertSyncRun(config, { status: failed ? 'partial' : 'completed', processed, failed, startedAt, checkpoint: nextCheckpoint, message: `제주어 ${allRows.length}건 신규 확인, ${processed}건 저장, ${retired}건 비활성화` });
-    return res.json({ ok: failed === 0, source: SOURCE, fetched: allRows.length, processed, failed, retired, checkpoint: nextCheckpoint });
+    const retirement = Object.keys(checkpoint).length
+      ? { retired: 0, failed: 0 }
+      : await deactivateStale(config, new Set(allRows.map((row) => row.rowId)), startedAt, error);
+    const retired = retirement.retired;
+    failed += retirement.failed;
+    const persistedCheckpoint = failed ? checkpoint : nextCheckpoint;
+    await upsertSyncRun(config, { status: failed ? 'partial' : 'completed', processed, failed, startedAt, checkpoint: persistedCheckpoint, message: `제주어 ${allRows.length}건 신규 확인, ${processed}건 저장, ${retired}건 비활성화` });
+    return res.json({ ok: failed === 0, source: SOURCE, fetched: allRows.length, processed, failed, retired, checkpoint: persistedCheckpoint });
   } catch (cause) {
     await upsertSyncRun(config, { status: 'failed', processed, failed: failed + 1, startedAt, message: cause.message }).catch(() => {});
     error(cause.stack || cause.message);
@@ -152,30 +157,37 @@ function normalizeItems(value) { return Array.isArray(value) ? value : value ? [
 async function deactivateStale(config, currentIds, retiredAt, error) {
   const rows = await listRows(config, ITEMS_TABLE_ID, []);
   const stale = rows.filter((row) => row.$id && row.source === SOURCE && row.active === true && !currentIds.has(row.$id));
+  let retired = 0;
+  let failed = 0;
   await mapLimit(stale, WRITE_CONCURRENCY, async (row) => {
-    try { await updateRow(config, ITEMS_TABLE_ID, row.$id, { active: false, retiredAt: retiredAt.toISOString() }); } catch (cause) { error(`제주어 비활성화 실패 ${row.$id}: ${cause.message}`); }
+    try {
+      await updateRow(config, ITEMS_TABLE_ID, row.$id, { active: false, retiredAt: retiredAt.toISOString() });
+      retired += 1;
+    } catch (cause) {
+      failed += 1;
+      error(`제주어 비활성화 실패 ${row.$id}: ${cause.message}`);
+    }
   });
-  return stale.length;
+  return { retired, failed };
 }
 
 async function listRows(config, tableId, queries) {
-  const url = new URL(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows`);
-  url.searchParams.set('limit', '5000'); url.searchParams.set('total', 'false');
-  queries.forEach((query) => url.searchParams.append('queries[]', query));
-  const response = await fetchWithTimeout(url.toString(), { headers: appwriteHeaders(config) });
+  const params = new URLSearchParams({ limit: '5000', total: 'false' });
+  queries.forEach((query) => params.append('queries[]', query));
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows?${params.toString()}`, { headers: appwriteHeaders(config) });
   if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
   return normalizeItems((await response.json()).rows);
 }
 
 async function upsertRow(config, tableId, rowId, data, permissions) { return appwriteWrite(config, tableId, rowId, 'PUT', { data: withoutNulls(data), permissions }); }
 async function upsertRows(config, tableId, rows) {
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows`, { method: 'PUT', headers: { ...appwriteHeaders(config), 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) });
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows`, { method: 'PUT', headers: { ...appwriteHeaders(config), 'Content-Type': 'application/json' }, body: JSON.stringify({ rows }) });
   if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
   return response.json();
 }
 async function updateRow(config, tableId, rowId, data) { return appwriteWrite(config, tableId, rowId, 'PATCH', { data: withoutNulls(data) }); }
 async function appwriteWrite(config, tableId, rowId, method, body) {
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, { method, headers: { ...appwriteHeaders(config), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, { method, headers: { ...appwriteHeaders(config), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
   return response.json();
 }
@@ -194,5 +206,23 @@ function appwriteConfig(req) { return { endpoint: process.env.APPWRITE_FUNCTION_
 function isSmokeRequest(req) { try { return req.body && JSON.parse(typeof req.body === 'string' ? req.body : JSON.stringify(req.body)).smoke === true; } catch { return false; } }
 async function fetchWithTimeout(url, options = {}) { const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS); try { return await fetch(url, { ...options, signal: controller.signal }); } finally { clearTimeout(timeout); } }
 async function fetchWithRetry(url, options) { let lastError; for (let attempt = 1; attempt <= FETCH_RETRIES; attempt += 1) { try { const response = await fetchWithTimeout(url, options); if (response.status < 500 || attempt === FETCH_RETRIES) return response; lastError = new Error(`retryable HTTP ${response.status}`); } catch (cause) { lastError = cause; if (attempt === FETCH_RETRIES) throw cause; } await new Promise((resolve) => setTimeout(resolve, RETRY_BASE_DELAY_MS * (2 ** (attempt - 1)))); } throw lastError || new Error('Request failed'); }
+async function appwriteRequest(config, path, options) {
+  const endpoints = [...new Set([config.endpoint, DEFAULT_ENDPOINT].map((value) => String(value || '').replace(/\/$/, '')).filter(Boolean))];
+  let lastError;
+  for (let index = 0; index < endpoints.length; index += 1) {
+    try {
+      const response = await fetchWithRetry(`${endpoints[index]}${path}`, options);
+      if ((response.status === 408 || response.status === 425 || response.status === 429 || response.status >= 500) && index + 1 < endpoints.length) {
+        lastError = new Error(`Appwrite endpoint returned retryable HTTP ${response.status}`);
+        continue;
+      }
+      return response;
+    } catch (cause) {
+      lastError = cause;
+      if (index + 1 >= endpoints.length) throw cause;
+    }
+  }
+  throw lastError || new Error('Appwrite request failed without an error');
+}
 async function mapLimit(items, limit, mapper) { const results = []; let cursor = 0; await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => { while (cursor < items.length) { const index = cursor++; results[index] = await mapper(items[index], index); } })); return results; }
 function chunk(items, size) { const batches = []; for (let index = 0; index < items.length; index += size) batches.push(items.slice(index, index + size)); return batches; }

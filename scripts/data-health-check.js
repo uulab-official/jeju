@@ -22,14 +22,16 @@ const headers = {
 async function main() {
   const problems = [];
 
-  const [tourismFunction, cultureFunction, tourismExecutions] = await Promise.all([
+  const [tourismFunction, cultureFunction, tourismExecutions, cultureExecutions] = await Promise.all([
     get(`/functions/${encodeURIComponent(tourismFunctionId)}`),
     get(`/functions/${encodeURIComponent(cultureFunctionId)}`),
     listExecutions(tourismFunctionId),
+    listExecutions(cultureFunctionId),
   ]);
   checkFunction(tourismFunction, tourismFunctionId, problems, 'TOUR_API_SERVICE_KEY');
   checkFunction(cultureFunction, cultureFunctionId, problems);
   checkExecutionHistory(tourismExecutions, tourismFunction, tourismFunctionId, problems);
+  checkExecutionHistory(cultureExecutions, cultureFunction, cultureFunctionId, problems);
 
   const syncRuns = await get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/sync_runs/rows?limit=100`);
   const [places, cultureItems] = await Promise.all([
