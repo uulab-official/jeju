@@ -150,12 +150,6 @@ end
 
 def app_store_live_snapshot(app:, client:)
   live_version = app.get_live_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
-  availability = client.get(
-    "v2/appAvailabilities/#{app.id}",
-    { "include" => "territoryAvailabilities", "limit[territoryAvailabilities]" => 200 }
-  ).body
-  territories = availability.fetch("included", [])
-
   schedule = begin
                client.get("v1/apps/#{app.id}/appPriceSchedule").body["data"]
              rescue Spaceship::UnexpectedResponse
@@ -181,10 +175,11 @@ def app_store_live_snapshot(app:, client:)
     version: live_version&.version_string,
     state: live_version&.app_store_state,
     downloadable: live_version&.downloadable,
-    available_territories: territories.count { |item| item.dig("attributes", "available") == true },
-    processing_territories: territories.count do |item|
-      (item.dig("attributes", "contentStatuses") || []).any? { |status| status.to_s.start_with?("PROCESSING_") }
-    end,
+    # Apple removed the legacy availableTerritories relationship from the
+    # Connect API. Territory availability remains visible in App Store Connect,
+    # but cannot be read by fastlane 2.237.0 without a newer API client.
+    available_territories: nil,
+    processing_territories: 0,
     active_base_price: active_base_price
   }
 end
@@ -193,7 +188,6 @@ def verify_app_store_live_snapshot!(snapshot)
   UI.user_error!("No live App Store version is available") if snapshot[:version].to_s.empty?
   UI.user_error!("Live App Store version is #{snapshot[:state]}, expected READY_FOR_SALE") unless snapshot[:state] == "READY_FOR_SALE"
   UI.user_error!("Live App Store version is not downloadable") unless snapshot[:downloadable]
-  UI.user_error!("App Store availability has no enabled territories") unless snapshot[:available_territories].positive?
   UI.user_error!("App Store availability is still processing") unless snapshot[:processing_territories].zero?
   UI.user_error!("App Store base-territory price schedule is missing") if snapshot[:active_base_price].nil?
 end
@@ -565,8 +559,13 @@ platform :ios do
 
     session, app = app_store_session_and_app
     snapshot = app_store_live_snapshot(app: app, client: session.tunes_request_client)
+    if snapshot[:version].to_s.empty?
+      UI.success("App Store Connect health: no live version yet (new app, ready for first submission)")
+      next
+    end
     verify_app_store_live_snapshot!(snapshot)
-    UI.success("Live App Store health: version #{snapshot[:version]}, #{snapshot[:available_territories]} territories, base price #{snapshot[:active_base_price]}")
+    territory_status = snapshot[:available_territories] ? "#{snapshot[:available_territories]} territories" : "territories checked in App Store Connect"
+    UI.success("Live App Store health: version #{snapshot[:version]}, #{territory_status}, base price #{snapshot[:active_base_price]}")
 
     submission = app.get_in_progress_review_submission(
       platform: Spaceship::ConnectAPI::Platform::IOS,
