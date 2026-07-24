@@ -47,11 +47,11 @@ flowchart LR
 
 ## 운영 자동 점검
 
-- `npm run data:health`는 Function의 enabled/live·예약 스케줄·최신 배포 상태와 `sync_runs`·`places`의 실제 원격 데이터를 확인한다. API 키나 장소 데이터가 없으면 성공으로 처리하지 않는다.
+- `npm run data:health`는 Function의 enabled/live·예약 스케줄·최신 배포 상태, 최신 실행과 예약 실행 복구 여부, `sync_runs`·`places`의 실제 원격 데이터를 확인한다. API 키나 장소 데이터가 없거나 복구되지 않은 Function 실패가 있으면 성공으로 처리하지 않는다.
 - `sync_runs`는 수집 실행마다 `sync-<시각>` 행을 추가한다. `source`는 비고유 인덱스로만 조회하고, `finishedAt` 인덱스로 최신 실행을 찾는다. 운영 이력은 덮어쓰지 않는다.
 - `.github/workflows/data-health.yml`은 매일 실행되며, 저장소 Secrets에 `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `APPWRITE_DATABASE_ID`, `APPWRITE_API_KEY`를 등록하면 수집 중단을 자동으로 감지한다.
 - 원격 수집 Function에는 `TOUR_API_SERVICE_KEY`를 Secret 변수로 등록해야 한다. 이 값은 앱 번들·Git 저장소·CI 로그에 넣지 않는다.
-- 네트워크 오류는 두 수집 Function과 앱의 Appwrite 조회 모두 타임아웃·재시도·캐시 보존으로 처리한다. TourAPI나 제주어 수집 응답이 비정상적으로 0건(또는 최소 건수 미만)이면 기존 Appwrite 데이터를 보존하고 실패 기록만 남긴다.
+- 네트워크 오류는 두 수집 Function과 앱의 Appwrite 조회 모두 타임아웃·재시도·캐시 보존으로 처리한다. 관광정보 Function은 런타임 내부 Appwrite API가 연결되지 않거나 재시도 가능한 5xx를 반환하면 고정된 공개 Endpoint로 전환한다. TourAPI나 제주어 수집 응답이 비정상적으로 0건(또는 최소 건수 미만)이면 기존 Appwrite 데이터를 보존하고 실패 기록만 남긴다.
 - 제주어 수집 Function은 최초 1회만 `page=1..n`, `pageSize=1000`으로 원천 응답을 나누고, 이후에는 `sync_runs.checkpointJson`의 마지막 `seq`보다 큰 신규 항목만 읽는다. 신규 항목이 없으면 리소스별 첫 페이지에서 멈추며, 각 페이지의 ID를 중복 제거하고 최대 100페이지 보호선을 둔다.
 - 관광정보 수집 Function은 최초 1회만 `areaBasedList2`로 기본 목록을 채웁니다. 이후에는 `areaBasedSyncList2`에 마지막 성공 체크포인트의 `modifiedtime`과 `lDongRegnCd=50`을 보내 신규·수정·비표출 항목만 읽습니다. 저장된 원천 수정일이 같으면 상세 API 호출을 생략하고, `showflag=0` 또는 `oldContentid`는 삭제 대신 비활성화로 반영합니다.
 - 앱의 제주어 `culture_items` 조회는 `$id` 커서 기반 20건 페이징을 사용한다. 검색은 Appwrite full-text 인덱스를 사용하고, 화면 끝에서 다음 20건만 추가한다.

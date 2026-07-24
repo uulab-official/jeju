@@ -3,6 +3,7 @@ import test from 'node:test';
 
 process.env.TOUR_API_SERVICE_KEY = 'test-key';
 process.env.TOUR_API_MAX_ITEMS = '1';
+process.env.TOUR_API_RETRIES = '1';
 
 const { default: collect } = await import('../src/main.js');
 
@@ -126,9 +127,14 @@ test('TourAPI 동기화 목록은 변경된 장소만 보강하고 비표출 장
   const writes = [];
   const requests = [];
   const originalFetch = globalThis.fetch;
+  const originalFunctionEndpoint = process.env.APPWRITE_FUNCTION_API_ENDPOINT;
+  process.env.APPWRITE_FUNCTION_API_ENDPOINT = 'http://internal-appwrite/v1';
   globalThis.fetch = async (input, options = {}) => {
     const requestUrl = String(input);
     requests.push(requestUrl);
+    if (requestUrl.startsWith('http://internal-appwrite/v1/')) {
+      throw new TypeError('simulated internal Appwrite network failure');
+    }
     if (requestUrl.includes('/tables/sync_runs/rows?')) {
       return json({ rows: [{
         source: 'tourapi-kor-service2',
@@ -192,6 +198,8 @@ test('TourAPI 동기화 목록은 변경된 장소만 보강하고 비표출 장
     assert.equal(result.payload.skipped, 1);
     assert.match(requests.find((url) => url.includes('/areaBasedSyncList2')), /modifiedtime=20260723/);
     assert.equal(requests.some((url) => url.includes('/areaBasedList2')), false);
+    assert.ok(requests.some((url) => url.startsWith('http://internal-appwrite/v1/')));
+    assert.ok(requests.some((url) => url.startsWith('https://appwrite.uulab.co.kr/v1/')));
     assert.equal(requests.filter((url) => url.includes('/detailCommon2')).length, 1);
     assert.ok(writes.some((write) => write.requestUrl.endsWith('/tour-789') && write.body.data.active === false));
     assert.ok(writes.some((write) => write.requestUrl.endsWith('/tour-456') && write.method === 'PUT'));
@@ -200,6 +208,8 @@ test('TourAPI 동기화 목록은 변경된 장소만 보강하고 비표출 장
     assert.match(syncWrite?.body.data.checkpointJson, /"modifiedDate":"\d{8}"/);
   } finally {
     globalThis.fetch = originalFetch;
+    if (originalFunctionEndpoint === undefined) delete process.env.APPWRITE_FUNCTION_API_ENDPOINT;
+    else process.env.APPWRITE_FUNCTION_API_ENDPOINT = originalFunctionEndpoint;
   }
 });
 

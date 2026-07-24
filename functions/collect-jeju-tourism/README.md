@@ -21,5 +21,7 @@ Appwrite Function의 동적 키에는 `rows.read`, `rows.write` scope가 필요�
 - `oldContentid`: 콘텐츠 ID 변경 시 이전 행을 비활성화
 - Appwrite에 저장된 `modifiedAt`과 원천 수정일이 같으면 상세·이미지 호출을 생략
 - 체크포인트가 없는 기존 설치에 장소 데이터가 있으면 전날부터 증분 수집을 시작
+- Appwrite 런타임 내부 API 주소가 네트워크 오류 또는 재시도 가능한 5xx를 반환하면 고정된 공개 Endpoint로 전환
+- 부분 실패 시 체크포인트를 전진시키지 않아 다음 실행에서 같은 변경분을 다시 처리
 
 제3자 후기·블로그·SNS 이미지 등은 수집하지 않습니다. 앱은 TourAPI가 개방한 이미지 URL과 저작권 구분 코드를 원본 메타데이터로 보존합니다.

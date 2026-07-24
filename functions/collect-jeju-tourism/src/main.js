@@ -371,7 +371,7 @@ function appwriteConfig(req) {
 }
 
 async function upsertRow(config, tableId, rowId, data, permissions) {
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows/${rowId}`, {
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows/${rowId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
     body: JSON.stringify({ data: withoutNulls(data), permissions }),
@@ -381,7 +381,7 @@ async function upsertRow(config, tableId, rowId, data, permissions) {
 }
 
 async function updateRow(config, tableId, rowId, data) {
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, {
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
     body: JSON.stringify({ data: withoutNulls(data) }),
@@ -391,7 +391,7 @@ async function updateRow(config, tableId, rowId, data) {
 }
 
 async function getRow(config, tableId, rowId) {
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, {
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows/${encodeURIComponent(rowId)}`, {
     headers: { 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
   });
   if (response.status === 404) return null;
@@ -402,7 +402,7 @@ async function getRow(config, tableId, rowId) {
 async function listRows(config, tableId, queries, offset, limit = STALE_SCAN_PAGE_SIZE) {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset), total: 'false' });
   queries.forEach((query) => params.append('queries[]', query));
-  const response = await fetchWithTimeout(`${config.endpoint}/tablesdb/${config.databaseId}/tables/${tableId}/rows?${params.toString()}`, {
+  const response = await appwriteRequest(config, `/tablesdb/${config.databaseId}/tables/${tableId}/rows?${params.toString()}`, {
     headers: { 'X-Appwrite-Project': config.projectId, 'X-Appwrite-Key': config.apiKey },
   });
   if (!response.ok) throw new Error((await response.text()).slice(0, 300) || `Appwrite ${response.status}`);
@@ -498,6 +498,25 @@ async function upsertSyncRun(config, { status, processed, failed, startedAt, mes
     startedAt: startedAt.toISOString(), finishedAt: new Date().toISOString(), message: String(message || '').slice(0, 8000),
     checkpointJson: checkpoint ? JSON.stringify(checkpoint) : '',
   });
+}
+
+async function appwriteRequest(config, path, options) {
+  const endpoints = [...new Set([config.endpoint, DEFAULT_ENDPOINT].map((value) => String(value || '').replace(/\/$/, '')).filter(Boolean))];
+  let lastError;
+  for (let index = 0; index < endpoints.length; index += 1) {
+    try {
+      const response = await fetchWithTimeout(`${endpoints[index]}${path}`, options);
+      if (shouldRetryStatus(response.status) && index + 1 < endpoints.length) {
+        lastError = new Error(`Appwrite endpoint returned retryable HTTP ${response.status}`);
+        continue;
+      }
+      return response;
+    } catch (cause) {
+      lastError = cause;
+      if (index + 1 >= endpoints.length) throw cause;
+    }
+  }
+  throw lastError || new Error('Appwrite request failed without an error');
 }
 
 async function fetchWithTimeout(url, options = {}) {

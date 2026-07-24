@@ -22,12 +22,14 @@ const headers = {
 async function main() {
   const problems = [];
 
-  const [tourismFunction, cultureFunction] = await Promise.all([
+  const [tourismFunction, cultureFunction, tourismExecutions] = await Promise.all([
     get(`/functions/${encodeURIComponent(tourismFunctionId)}`),
     get(`/functions/${encodeURIComponent(cultureFunctionId)}`),
+    listExecutions(tourismFunctionId),
   ]);
   checkFunction(tourismFunction, tourismFunctionId, problems, 'TOUR_API_SERVICE_KEY');
   checkFunction(cultureFunction, cultureFunctionId, problems);
+  checkExecutionHistory(tourismExecutions, tourismFunction, tourismFunctionId, problems);
 
   const syncRuns = await get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/sync_runs/rows?limit=100`);
   const [places, cultureItems] = await Promise.all([
@@ -81,6 +83,40 @@ function checkFunction(functionInfo, functionId, problems, requiredSecret) {
   }
 }
 
+function checkExecutionHistory(payload, functionInfo, functionId, problems) {
+  const executions = Array.isArray(payload.executions) ? payload.executions : [];
+  if (!executions.length) {
+    problems.push(`${functionId} Function 실행 기록이 없습니다.`);
+    return;
+  }
+
+  const latest = executions[0];
+  const latestCreatedAt = Date.parse(latest.$createdAt || latest.createdAt || '');
+  if (latest.status === 'failed') {
+    problems.push(`${functionId} 최신 실행이 실패했습니다 (${latest.$id || 'unknown'}).`);
+  } else if (['waiting', 'processing'].includes(String(latest.status))
+    && Number.isFinite(latestCreatedAt) && Date.now() - latestCreatedAt > 15 * 60 * 1000) {
+    problems.push(`${functionId} 최신 실행이 15분 이상 ${latest.status} 상태입니다.`);
+  }
+
+  const latestScheduled = executions.find((execution) => execution.trigger === 'schedule');
+  if (!latestScheduled) {
+    problems.push(`${functionId} 예약 실행 기록이 없습니다.`);
+    return;
+  }
+  if (latestScheduled.status !== 'failed') return;
+
+  const scheduledAt = Date.parse(latestScheduled.$createdAt || latestScheduled.createdAt || '');
+  const recovered = executions.some((execution) => (
+    execution.status === 'completed'
+    && execution.deploymentId === functionInfo.deploymentId
+    && Date.parse(execution.$createdAt || execution.createdAt || '') > scheduledAt
+  ));
+  if (!recovered && latest.status !== 'failed') {
+    problems.push(`${functionId} 최근 예약 실행 실패 후 현재 배포의 성공 실행이 없습니다 (${latestScheduled.$id || 'unknown'}).`);
+  }
+}
+
 function checkSync(latest, problems, options) {
   if (!latest) {
     problems.push(options.missing);
@@ -109,6 +145,13 @@ async function get(path) {
   }
   if (!response.ok) throw new Error(`Appwrite 요청 실패 (${response.status}, ${path}): ${payload.message || 'unknown error'}`);
   return payload;
+}
+
+function listExecutions(functionId) {
+  const params = new URLSearchParams({ total: 'false' });
+  params.append('queries[]', JSON.stringify({ method: 'orderDesc', attribute: '$createdAt', values: [] }));
+  params.append('queries[]', JSON.stringify({ method: 'limit', values: [20] }));
+  return get(`/functions/${encodeURIComponent(functionId)}/executions?${params.toString()}`);
 }
 
 function loadDotEnv(file) {
