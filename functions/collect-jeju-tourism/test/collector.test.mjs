@@ -23,6 +23,7 @@ test('TourAPI 장소와 여러 이미지 메타데이터를 Appwrite row로 정�
       return json({ response: { header: { resultCode: '0000' }, body: { items: { item: {
         contentid: '123', contenttypeid: '12', title: '테스트 오름', addr1: '제주특별자치도 제주시 애월읍',
         mapx: '126.4', mapy: '33.4', overview: '<p>공식 상세 설명</p>', firstimage: 'https://images.example/hero.jpg',
+        homepage: 'https://중문카트.com/',
       } } } } });
     }
     if (requestUrl.includes('/detailIntro2')) {
@@ -65,6 +66,7 @@ test('TourAPI 장소와 여러 이미지 메타데이터를 Appwrite row로 정�
     assert.equal(placeWrite.body.data.name, '테스트 오름');
     assert.equal(placeWrite.body.data.region, '제주시');
     assert.equal(placeWrite.body.data.openingHours, '09:00~18:00');
+    assert.equal(placeWrite.body.data.homepage, 'https://xn--z92b76wi8d22e.com/');
     assert.equal(JSON.parse(placeWrite.body.data.imagesJson).length, 3);
     assert.deepEqual(placeWrite.body.permissions, ['read("any")']);
     assert.ok(writes.some((write) => write.body.data?.source === 'tourapi-kor-service2'));
@@ -73,6 +75,12 @@ test('TourAPI 장소와 여러 이미지 메타데이터를 Appwrite row로 정�
     assert.match(areaRequest, /lDongRegnCd=50/);
     assert.doesNotMatch(areaRequest, /areaCode=/);
     assert.doesNotMatch(commonRequest, /defaultYN|firstImageYN|areacodeYN|catcodeYN|addrinfoYN|mapinfoYN|overviewYN/);
+    const staleListRequest = requests.find((url) => url.includes('/rows?'));
+    const staleQueries = new URL(staleListRequest).searchParams.getAll('queries[]').map(JSON.parse);
+    assert.deepEqual(staleQueries, [
+      { method: 'equal', attribute: 'source', values: ['tourapi-kor-service2'] },
+      { method: 'equal', attribute: 'active', values: [true] },
+    ]);
     const retiredWrite = writes.find((write) => write.requestUrl.endsWith('/tour-old'));
     assert.equal(retiredWrite?.body.data.active, false);
     assert.ok(retiredWrite?.body.data.retiredAt);

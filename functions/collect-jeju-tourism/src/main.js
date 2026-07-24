@@ -153,7 +153,7 @@ async function tourApi(serviceKey, operation, params) {
   return payload;
 }
 
-function toPlaceRow(base, common, intro, imageItems, collectedAt) {
+export function toPlaceRow(base, common, intro, imageItems, collectedAt) {
   const merged = { ...base, ...common };
   const contentId = clean(merged.contentid);
   const name = clean(merged.title);
@@ -279,7 +279,13 @@ function tourDate(value) {
 function normalizeUrl(value) {
   const cleaned = clean(value).replace(/^['"]|['"]$/g, '');
   const href = cleaned.match(/href=['"]([^'"]+)/i)?.[1] || cleaned;
-  return /^https?:\/\//i.test(href) ? href.replace(/^http:\/\//i, 'https://') : '';
+  if (!/^https?:\/\//i.test(href)) return '';
+  try {
+    const parsed = new URL(href.replace(/^http:\/\//i, 'https://'));
+    return parsed.protocol === 'https:' ? parsed.href : '';
+  } catch {
+    return '';
+  }
 }
 
 function clean(value) {
@@ -344,8 +350,8 @@ async function deactivateStalePlaces(config, currentRowIds, retiredAt, log) {
   const stale = [];
   for (let offset = 0; offset < MAX_STALE_SCAN; offset += STALE_SCAN_PAGE_SIZE) {
     const payload = await listRows(config, PLACES_TABLE_ID, [
-      `equal("source", ["${SOURCE}"])`,
-      'equal("active", [true])',
+      JSON.stringify({ method: 'equal', attribute: 'source', values: [SOURCE] }),
+      JSON.stringify({ method: 'equal', attribute: 'active', values: [true] }),
     ], offset);
     const rows = Array.isArray(payload.rows) ? payload.rows : [];
     stale.push(...rows.filter((row) => row.$id && !currentRowIds.has(row.$id)));

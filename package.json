@@ -57,7 +57,7 @@
     "appwrite:push": "appwrite push all --all --force",
     "appwrite:collect": "appwrite functions create-execution --function-id collect-jeju-culture --body '{}' --async false",
     "appwrite:collect:culture": "appwrite functions create-execution --function-id collect-jeju-culture --body '{}' --async false",
-    "appwrite:collect:tourism": "appwrite functions create-execution --function-id collect-jeju-tourism --body '{}' --async false",
+    "appwrite:collect:tourism": "appwrite functions create-execution --function-id collect-jeju-tourism --body '{}' --async true",
     "data:health": "node scripts/data-health-check.js",
     "test:data": "node --test functions/collect-jeju-tourism/test/collector.test.mjs",
     "verify": "npm run typecheck && npm run lint && npm run doctor && npm run startup:check && npm run appwrite:check && npm run test:data",
