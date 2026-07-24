@@ -12,6 +12,14 @@ import {
 import { fetchCulturePage, getCultureBackendConfig } from '@/src/services/appwriteCulture';
 import { JejuItem, ResourceKind, resourceKinds } from '@/src/types/jeju';
 
+type ResourceCache = {
+  version: 1;
+  items: JejuItem[];
+  cursor?: string;
+  hasMore: boolean;
+  totalCount: number;
+};
+
 type ResourceState = {
   items: JejuItem[];
   loading: boolean;
@@ -62,11 +70,29 @@ export function JejuDataProvider({ children }: PropsWithChildren) {
       try {
         const saved = await AsyncStorage.getItem(cacheKey(kind));
         if (saved) {
-          const items = JSON.parse(saved) as JejuItem[];
-          if (items.length) {
+          const parsed = JSON.parse(saved) as JejuItem[] | Partial<ResourceCache>;
+          const cache: ResourceCache = Array.isArray(parsed)
+            ? { version: 1, items: parsed, hasMore: false, totalCount: parsed.length }
+            : {
+                version: 1,
+                items: Array.isArray(parsed.items) ? parsed.items : [],
+                cursor: typeof parsed.cursor === 'string' ? parsed.cursor : undefined,
+                hasMore: parsed.hasMore === true,
+                totalCount: Number.isFinite(parsed.totalCount) ? Number(parsed.totalCount) : 0,
+              };
+          if (cache.items.length) {
             setResources((current) => ({
               ...current,
-              [kind]: { items, loading: false, refreshing: true, loadingMore: false, hasMore: false, totalCount: items.length, fromCache: true },
+              [kind]: {
+                items: cache.items,
+                loading: false,
+                refreshing: true,
+                loadingMore: false,
+                hasMore: cache.hasMore && Boolean(cache.cursor),
+                totalCount: cache.totalCount || cache.items.length,
+                cursor: cache.cursor,
+                fromCache: true,
+              },
             }));
           }
         }
@@ -81,7 +107,13 @@ export function JejuDataProvider({ children }: PropsWithChildren) {
         ...current,
         [kind]: { items: page.items, loading: false, refreshing: false, loadingMore: false, hasMore: page.hasMore, totalCount: page.total, cursor: page.nextCursor, fromCache: false },
       }));
-      void AsyncStorage.setItem(cacheKey(kind), JSON.stringify(page.items));
+      void AsyncStorage.setItem(cacheKey(kind), JSON.stringify({
+        version: 1,
+        items: page.items,
+        cursor: page.nextCursor,
+        hasMore: page.hasMore,
+        totalCount: page.total,
+      } satisfies ResourceCache));
     } catch (error) {
       setResources((current) => ({
         ...current,
@@ -106,7 +138,13 @@ export function JejuDataProvider({ children }: PropsWithChildren) {
         const items = [...previous.items, ...page.items.filter((item) => !previous.items.some((loaded) => loaded.id === item.id))];
         return { ...value, [kind]: { ...previous, items, loadingMore: false, hasMore: page.hasMore, totalCount: page.total || previous.totalCount, cursor: page.nextCursor } };
       });
-      void AsyncStorage.setItem(cacheKey(kind), JSON.stringify([...current.items, ...page.items]));
+      void AsyncStorage.setItem(cacheKey(kind), JSON.stringify({
+        version: 1,
+        items: [...current.items, ...page.items],
+        cursor: page.nextCursor,
+        hasMore: page.hasMore,
+        totalCount: page.total || current.totalCount,
+      } satisfies ResourceCache));
     } catch (error) {
       setResources((value) => ({ ...value, [kind]: { ...value[kind], loadingMore: false, error: error instanceof Error ? error.message : '데이터를 더 불러오지 못했습니다.' } }));
     }
