@@ -12,6 +12,8 @@ const TOKEN_STORAGE_KEY = '@jeju/expo-push-token/v1';
 const OPT_OUT_STORAGE_KEY = '@jeju/push-opt-out/v1';
 const INSTALLATION_STORAGE_KEY = '@jeju/push-installation-id/v1';
 const LAST_SYNC_STORAGE_KEY = '@jeju/push-last-sync/v1';
+const INBOX_STORAGE_KEY = '@jeju/push-inbox/v1';
+const MAX_INBOX_ITEMS = 50;
 const CHANNEL_ID = 'jeju-news';
 const PUSH_SYNC_FRESHNESS_MS = 24 * 60 * 60 * 1_000;
 const ALLOWED_ROUTE_ROOTS = new Set(['detail', 'library', 'notifications', 'places', 'settings']);
@@ -21,8 +23,17 @@ type PushState = 'checking' | 'disabled' | 'enabled' | 'unsupported' | 'error';
 type PushContextValue = {
   state: PushState;
   errorMessage: string | null;
+  notifications: PushInboxItem[];
   enable: () => Promise<void>;
   disable: () => Promise<void>;
+};
+
+export type PushInboxItem = {
+  id: string;
+  title: string;
+  body: string;
+  receivedAt: string;
+  route?: string;
 };
 
 const PushContext = createContext<PushContextValue | null>(null);
@@ -97,11 +108,28 @@ function notificationRoute(response: Notifications.NotificationResponse) {
 export function PushNotificationsProvider({ children }: PropsWithChildren) {
   const [state, setState] = useState<PushState>('checking');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<PushInboxItem[]>([]);
   const handledResponseIds = useRef(new Set<string>());
+
+  const recordNotification = useCallback((notification: Notifications.Notification) => {
+    const request = notification.request;
+    const content = request.content;
+    const title = typeof content.title === 'string' && content.title.trim() ? content.title.trim() : '제주 소식';
+    const body = typeof content.body === 'string' ? content.body.trim() : '';
+    const route = typeof content.data?.route === 'string' ? content.data.route : undefined;
+    const item: PushInboxItem = { id: request.identifier, title, body, receivedAt: new Date().toISOString(), route };
+    setNotifications((current) => {
+      if (current.some((entry) => entry.id === item.id)) return current;
+      const next = [item, ...current].slice(0, MAX_INBOX_ITEMS);
+      void AsyncStorage.setItem(INBOX_STORAGE_KEY, JSON.stringify(next)).catch(() => undefined);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     const handleResponse = (response: Notifications.NotificationResponse) => {
+      recordNotification(response.notification);
       const identifier = response.notification.request.identifier;
       if (handledResponseIds.current.has(identifier)) return;
       handledResponseIds.current.add(identifier);
@@ -156,6 +184,7 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
       handleResponse(response);
       Notifications.clearLastNotificationResponse();
     });
+    const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => recordNotification(notification));
     const tokenSubscription = Notifications.addPushTokenListener(() => {
       void AsyncStorage.getItem(OPT_OUT_STORAGE_KEY).then((optedOut) => {
         if (optedOut) return;
@@ -169,8 +198,21 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
     return () => {
       mounted = false;
       responseSubscription.remove();
+      receivedSubscription.remove();
       tokenSubscription.remove();
     };
+  }, [recordNotification]);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(INBOX_STORAGE_KEY).then((value) => {
+      if (!value) return;
+      try {
+        const parsed = JSON.parse(value) as unknown;
+        if (Array.isArray(parsed)) setNotifications(parsed.filter(isInboxItem).slice(0, MAX_INBOX_ITEMS));
+      } catch {
+        // A malformed inbox must not block notification registration.
+      }
+    }).catch(() => undefined);
   }, []);
 
   const enable = useCallback(async () => {
@@ -210,8 +252,18 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
     }
   }, []);
 
-  const value = useMemo(() => ({ state, errorMessage, enable, disable }), [disable, enable, errorMessage, state]);
+  const value = useMemo(() => ({ state, errorMessage, notifications, enable, disable }), [disable, enable, errorMessage, notifications, state]);
   return <PushContext.Provider value={value}>{children}</PushContext.Provider>;
+}
+
+function isInboxItem(value: unknown): value is PushInboxItem {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Partial<PushInboxItem>;
+  return typeof item.id === 'string'
+    && typeof item.title === 'string'
+    && typeof item.body === 'string'
+    && typeof item.receivedAt === 'string'
+    && Number.isFinite(Date.parse(item.receivedAt));
 }
 
 export function usePushNotifications() {
