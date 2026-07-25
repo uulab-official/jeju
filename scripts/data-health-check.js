@@ -33,7 +33,9 @@ async function main() {
   checkExecutionHistory(tourismExecutions, tourismFunction, tourismFunctionId, problems);
   checkExecutionHistory(cultureExecutions, cultureFunction, cultureFunctionId, problems);
 
-  const syncRuns = await get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/sync_runs/rows?limit=100`);
+  const syncRunQueries = new URLSearchParams({ limit: '100' });
+  syncRunQueries.append('queries[]', JSON.stringify({ method: 'orderDesc', attribute: 'finishedAt', values: [] }));
+  const syncRuns = await get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/sync_runs/rows?${syncRunQueries.toString()}`);
   const [places, cultureItems] = await Promise.all([
     get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/places/rows?limit=1`),
     get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/culture_items/rows?limit=1`),
