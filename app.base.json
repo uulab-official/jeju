@@ -34,7 +34,7 @@
     },
     "android": {
       "package": "kr.co.uulab.jeju",
-      "versionCode": 26072601,
+      "versionCode": 26072602,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFF3C4",
