@@ -153,6 +153,7 @@ function Navigation() {
         <Stack.Screen name="detail/[kind]/[id]" />
         <Stack.Screen name="places/[id]" />
         <Stack.Screen name="guides/[id]" />
+        <Stack.Screen name="trip-prep" />
         <Stack.Screen name="history/index" />
         <Stack.Screen name="history/[id]" />
         <Stack.Screen name="language/search" />
