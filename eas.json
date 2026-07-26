@@ -72,11 +72,11 @@
         "appleTeamId": "N99FMBQ662",
         "ascAppId": "6793418676"
       },
-      "android": {
-        "serviceAccountKeyPath": "./credentials/play-service-account.json",
-        "track": "internal",
-        "releaseStatus": "draft"
-      }
+    "android": {
+      "serviceAccountKeyPath": "./credentials/play-service-account.json",
+      "track": "production",
+      "releaseStatus": "completed"
+    }
     }
   }
 }
