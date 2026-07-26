@@ -65,6 +65,19 @@ export function TravelGuideScreen({ id }: { id: string }) {
           ))}
         </View>
 
+        <HapticPressable
+          feedback="medium"
+          onPress={() => router.push('/map')}
+          style={[styles.mapButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          <Ionicons name="map-outline" size={20} color={colors.primaryStrong} />
+          <View style={styles.mapButtonCopy}>
+            <Text selectable style={[styles.mapButtonTitle, { color: colors.text }]}>이 코스를 지도에서 보기</Text>
+            <Text selectable style={[styles.mapButtonText, { color: colors.muted }]}>주변 장소와 이동 위치를 한눈에 확인해요</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+        </HapticPressable>
+
         <View style={[styles.tipCard, { backgroundColor: colors.surfaceAlt }]}>
           <Ionicons name="sparkles-outline" size={23} color={colors.primaryStrong} />
           <View style={styles.tipCopy}>
@@ -103,6 +116,10 @@ const styles = StyleSheet.create({
   stepName: { fontSize: 16, fontWeight: '900' },
   stepSummary: { fontSize: 12, lineHeight: 18 },
   stepArea: { fontSize: 11, fontWeight: '800' },
+  mapButton: { minHeight: 68, borderWidth: 1, borderRadius: 19, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 11 },
+  mapButtonCopy: { flex: 1, gap: 3 },
+  mapButtonTitle: { fontSize: 14, fontWeight: '900' },
+  mapButtonText: { fontSize: 11, lineHeight: 17 },
   tipCard: { borderRadius: 20, padding: 17, flexDirection: 'row', gap: 12 },
   tipCopy: { flex: 1, gap: 7 },
   tipTitle: { fontSize: 15, fontWeight: '900' },
