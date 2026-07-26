@@ -17,6 +17,20 @@ export type TravelGuide = {
 
 export const travelGuides: TravelGuide[] = [
   {
+    id: 'volcanic-jeju',
+    eyebrow: '세계자연유산',
+    title: '용암이 만든 섬의 모양',
+    summary: '한라산과 성산의 바다, 섬의 지형을 따라 제주가 만들어진 시간을 여행해요.',
+    duration: '하루 이상',
+    pace: '천천히 관찰하기',
+    icon: 'earth-outline',
+    accent: ['#4C9B91', '#1E5B58'],
+    categories: ['nature', 'walk', 'island'],
+    tags: ['세계자연유산', '화산', '용암', '한라산', '성산'],
+    fallbackPlaceIds: ['hallasan', 'seongsan-ilchulbong', 'udo'],
+    tips: ['탐방로 통제와 기상 정보는 출발 전 공식 안내에서 확인해요.', '용암 지형과 해안 절벽은 지정된 탐방로 안에서 관찰해요.'],
+  },
+  {
     id: 'east-island-day',
     eyebrow: '동쪽 하루',
     title: '해 뜨는 섬을 따라',

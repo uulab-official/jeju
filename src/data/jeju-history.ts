@@ -20,6 +20,27 @@ export type JejuHistoryChapter = {
 
 export const jejuHistoryChapters: JejuHistoryChapter[] = [
   {
+    id: 'volcanic-island',
+    period: '지질의 시간–현재',
+    eyebrow: '화산섬 제주',
+    title: '용암이 빚은 세 가지 풍경',
+    summary: '한라산, 거문오름 용암동굴계, 성산일출봉은 제주가 화산 활동으로 빚어진 섬임을 보여줘요.',
+    paragraphs: [
+      '제주 화산섬과 용암동굴은 한라산 천연보호구역, 거문오름 용암동굴계, 성산일출봉 응회구로 이루어진 연속 유산입니다. 서로 다른 지형이 한 섬 안에서 이어져 제주 화산 지형의 형성과 변화를 살펴볼 수 있어요.',
+      '거문오름의 용암동굴, 바다 위로 솟은 성산일출봉, 계절마다 표정이 달라지는 한라산은 경관이면서 동시에 지구의 화산 작용을 보여주는 자연 기록입니다. 여행할 때는 멋진 풍경만 소비하기보다 지정된 길과 보전 규칙을 함께 지키는 것이 중요해요.',
+    ],
+    icon: 'earth-outline',
+    accent: ['#4C9B91', '#1E5B58'],
+    sourceName: 'UNESCO 세계유산센터 · 제주 화산섬과 용암동굴',
+    sourceUrl: 'https://whc.unesco.org/en/list/1264/',
+    place: {
+      name: '성산일출봉',
+      address: '서귀포시 성산읍 일출로 284-12',
+      note: '바다에서 솟은 응회구의 지형을 가까이서 살펴볼 수 있는 제주 대표 자연유산이에요.',
+      url: 'https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018045',
+    },
+  },
+  {
     id: 'tamna',
     period: '기원후 2세기 무렵–1105',
     eyebrow: '섬나라 탐라',
