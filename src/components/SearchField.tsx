@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 
 export function SearchField({ value, onChangeText, autoFocus = false }: { value: string; onChangeText: (value: string) => void; autoFocus?: boolean }) {
@@ -21,12 +22,23 @@ export function SearchField({ value, onChangeText, autoFocus = false }: { value:
         style={[styles.input, { color: colors.text }]}
         value={value}
       />
-      {value ? <Ionicons name="close-circle" size={18} color={colors.muted} onPress={() => onChangeText('')} /> : null}
+      {value ? (
+        <HapticPressable
+          accessibilityLabel="검색어 지우기"
+          feedback="light"
+          hitSlop={8}
+          onPress={() => onChangeText('')}
+          style={styles.clearButton}
+        >
+          <Ionicons name="close-circle" size={19} color={colors.muted} />
+        </HapticPressable>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { height: 50, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 10 },
+  clearButton: { width: 32, height: 40, alignItems: 'center', justifyContent: 'center' },
   input: { flex: 1, fontSize: 16, paddingVertical: 0 },
 });
