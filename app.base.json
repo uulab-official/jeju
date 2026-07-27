@@ -22,13 +22,14 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "kr.co.uulab.jeju",
-      "buildNumber": "26072601",
+      "buildNumber": "26072701",
       "supportsTablet": false,
       "entitlements": {
         "aps-environment": "production"
       },
       "infoPlist": {
         "CFBundleDisplayName": "소랑제주",
+        "NSLocationWhenInUseUsageDescription": "제주 여행지 지도를 현재 위치 기준으로 확인할 때 사용합니다.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
