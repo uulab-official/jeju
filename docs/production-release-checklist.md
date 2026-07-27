@@ -54,6 +54,7 @@ npx expo config --type public
 - [x] EAS production 프로필 및 OTA runtime 1.0.0
 - [x] iOS 빌드 제출 완료(심사 대기)
 - [x] Android 프로덕션 제출 완료(Version code 26072602)
+- [x] Production OTA 배포 완료(iOS/Android, runtime 1.0.0)
 - [ ] Apple 심사 승인 및 출시
 - [ ] Google 심사 승인 및 출시
 
