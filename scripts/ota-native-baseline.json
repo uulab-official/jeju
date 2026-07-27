@@ -2,7 +2,7 @@
   "runtimeVersion": "1.0.0",
   "buildCode": "26072601",
   "platformBuildCodes": {
-    "ios": "26072601",
+    "ios": "26072701",
     "android": "26072602"
   },
   "verifiedArtifacts": {
@@ -15,7 +15,7 @@
     "ios/"
   ],
   "files": {
-    "app.base.json": "14749f133a4c649671542f0328af2a791c3cf4ddf9a6000994f5901d3f75d06c",
+    "app.base.json": "636dbce28f895185d987c91784070ba64a17a15f8687ec2c48843acbeb5aa066",
     "app.config.js": "a805f6a9e75ec676ecd582b60e0492f44781f35bdbacb0223269af4a9d9549f0",
     "eas.json": "2abb0e4241e16f5cdc8145f40f02f717d429d4938915071a0d95612b5b53b8c5",
     "package-lock.json": "27698254a74c6a025547c0c12bf450d147bc0c8e3f0ac3270fa5e5f7051c556a",
