@@ -53,7 +53,7 @@ npx expo config --type public
 - [x] 개인정보처리방침: https://uulab.co.kr/privacy
 - [x] EAS production 프로필 및 OTA runtime 1.0.0
 - [x] iOS 빌드 제출 완료(심사 대기)
-- [ ] Android 프로덕션 제출 완료(새 AAB 빌드 완료 후 제출)
+- [x] Android 프로덕션 제출 완료(Version code 26072602)
 - [ ] Apple 심사 승인 및 출시
 - [ ] Google 심사 승인 및 출시
 
