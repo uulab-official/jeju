@@ -24,7 +24,7 @@ export function NotificationListScreen() {
       />
       <ScrollView contentContainerStyle={styles.content}>
         {notifications.length ? <View style={styles.list}>{notifications.map((item) => (
-          <HapticPressable key={item.id} feedback="light" onPress={() => { if (item.route) router.push(item.route as never); }} style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <HapticPressable accessibilityLabel={item.route ? `${item.title} 열기` : item.title} accessibilityRole={item.route ? 'button' : 'text'} key={item.id} feedback="light" onPress={() => { if (item.route) router.push(item.route as never); }} style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.itemIcon, { backgroundColor: colors.surfaceAlt }]}><Ionicons name="notifications-outline" size={20} color={colors.primaryStrong} /></View>
             <View style={styles.itemCopy}><Text style={[styles.itemTitle, { color: colors.text }]}>{item.title}</Text>{item.body ? <Text style={[styles.itemBody, { color: colors.muted }]}>{item.body}</Text> : null}<Text style={[styles.itemDate, { color: colors.muted }]}>{formatDate(item.receivedAt)}</Text></View>
             {item.route ? <Ionicons name="chevron-forward" size={18} color={colors.muted} /> : null}

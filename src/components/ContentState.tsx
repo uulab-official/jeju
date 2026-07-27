@@ -51,7 +51,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry: () 
       <View style={[styles.stateIcon, { backgroundColor: colors.surfaceAlt }]}><Ionicons name="cloud-offline-outline" size={28} color={colors.danger} /></View>
       <Text style={[styles.stateTitle, { color: colors.text }]}>데이터를 불러오지 못했어요</Text>
       <Text style={[styles.stateMessage, { color: colors.muted }]}>{message}</Text>
-      <HapticPressable feedback="medium" onPress={onRetry} style={[styles.retry, { backgroundColor: colors.primary }]}>
+      <HapticPressable accessibilityLabel="데이터 다시 시도" accessibilityRole="button" feedback="medium" onPress={onRetry} style={[styles.retry, { backgroundColor: colors.primary }]}>
         <Text style={[styles.retryText, { color: colors.onPrimary }]}>다시 시도</Text>
       </HapticPressable>
     </View>

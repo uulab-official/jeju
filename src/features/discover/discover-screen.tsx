@@ -36,7 +36,7 @@ export function DiscoverScreen() {
       <ScrollView horizontal contentContainerStyle={styles.filters} showsHorizontalScrollIndicator={false}>
         {placeCategories.map((item) => {
           const selected = category === item.id;
-          return <HapticPressable key={item.id} feedback="selection" onPress={() => router.setParams({ category: item.id })} style={[styles.filter, { backgroundColor: selected ? colors.primary : colors.surface, borderColor: selected ? colors.primary : colors.border }]}><Ionicons name={item.icon as never} size={16} color={selected ? colors.onPrimary : colors.muted} /><Text style={[styles.filterText, { color: selected ? colors.onPrimary : colors.text }]}>{item.label}</Text></HapticPressable>;
+          return <HapticPressable accessibilityLabel={`${item.label} 카테고리`} accessibilityRole="button" accessibilityState={{ selected }} key={item.id} feedback="selection" onPress={() => router.setParams({ category: item.id })} style={[styles.filter, { backgroundColor: selected ? colors.primary : colors.surface, borderColor: selected ? colors.primary : colors.border }]}><Ionicons name={item.icon as never} size={16} color={selected ? colors.onPrimary : colors.muted} /><Text style={[styles.filterText, { color: selected ? colors.onPrimary : colors.text }]}>{item.label}</Text></HapticPressable>;
         })}
       </ScrollView>
       <FlatList
