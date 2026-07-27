@@ -88,6 +88,15 @@ function matchesBaseline(filePath, baseline) {
     return (baseline.absentPrefixes || []).some((prefix) => filePath.startsWith(prefix));
   }
   const expected = baseline.files[filePath];
+  if (filePath === 'app.base.json' && fs.existsSync(absolutePath)) {
+    const current = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    delete current.expo?.ios?.buildNumber;
+    delete current.expo?.android?.versionCode;
+    const normalizedHash = crypto.createHash('sha256')
+      .update(JSON.stringify(sortJson(current)))
+      .digest('hex');
+    return normalizedHash === expected;
+  }
   return typeof expected === 'string' && sha256(absolutePath) === expected;
 }
 
@@ -99,10 +108,14 @@ if (process.env.ALLOW_NATIVE_OTA === '1') {
 try {
   const baseline = loadBaseline();
   const app = JSON.parse(fs.readFileSync(path.join(root, 'app.base.json'), 'utf8')).expo;
+  const platformBuildCodes = baseline.platformBuildCodes || {
+    ios: baseline.buildCode,
+    android: baseline.buildCode,
+  };
   if (
     app.runtimeVersion !== baseline.runtimeVersion
-    || String(app.ios?.buildNumber) !== baseline.buildCode
-    || String(app.android?.versionCode) !== baseline.buildCode
+    || String(app.ios?.buildNumber) !== String(platformBuildCodes.ios)
+    || String(app.android?.versionCode) !== String(platformBuildCodes.android)
   ) {
     throw new Error('Expo runtime/build values do not match the verified store baseline');
   }
