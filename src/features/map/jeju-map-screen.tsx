@@ -9,7 +9,7 @@ import { HapticPressable } from '@/src/components/HapticPressable';
 import { triggerHaptic } from '@/src/lib/haptics';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { usePlaceData } from '@/src/providers/PlaceDataProvider';
-import { openInNaverMap } from '@/src/services/naver-map';
+import { openInAppleMaps, openInNaverMap } from '@/src/services/naver-map';
 
 type NaverMapModule = typeof import('@mj-studio/react-native-naver-map');
 
@@ -57,7 +57,10 @@ export function JejuMapScreen() {
           <View key={place.id} style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={[styles.rowIcon, { backgroundColor: colors.surfaceAlt }]}><Ionicons name="location-outline" size={21} color={colors.primaryStrong} /></View>
             <HapticPressable style={styles.rowCopy} onPress={() => router.push({ pathname: '/places/[id]', params: { id: place.id } })}><Text selectable style={[styles.rowTitle, { color: colors.text }]}>{place.name}</Text><Text selectable style={[styles.rowMeta, { color: colors.muted }]}>{place.region} · {place.area}</Text></HapticPressable>
-            <HapticPressable accessibilityLabel={`${place.name} 네이버 지도에서 열기`} feedback="medium" onPress={() => void openInNaverMap(place)} style={[styles.naverButton, { borderColor: colors.border }]}><Text style={[styles.naverText, { color: colors.primaryStrong }]}>지도</Text></HapticPressable>
+            <View style={styles.mapActions}>
+              <HapticPressable accessibilityLabel={`${place.name} 네이버 지도에서 열기`} feedback="medium" onPress={() => void openInNaverMap(place)} style={[styles.naverButton, { borderColor: colors.border }]}><Text style={[styles.naverText, { color: colors.primaryStrong }]}>네이버</Text></HapticPressable>
+              <HapticPressable accessibilityLabel={`${place.name} Apple 지도에서 열기`} feedback="medium" onPress={() => void openInAppleMaps(place)} style={[styles.appleButton, { borderColor: colors.border }]}><Text style={[styles.naverText, { color: colors.text }]}>Apple</Text></HapticPressable>
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -66,4 +69,4 @@ export function JejuMapScreen() {
 }
 
 const pinPositions = [{ left: '60%', top: '34%' }, { left: '45%', top: '42%' }, { left: '79%', top: '28%' }, { left: '18%', top: '48%' }, { left: '52%', top: '25%' }] as const;
-const styles = StyleSheet.create({ screen: { flex: 1 }, nativeMap: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 34, gap: 10 }, mapPreview: { height: 260, borderWidth: 1, borderRadius: 25, overflow: 'hidden', position: 'relative', borderCurve: 'continuous' }, island: { position: 'absolute', width: '72%', height: '43%', left: '14%', top: '22%', borderRadius: 999, transform: [{ rotate: '-8deg' }], opacity: 0.9 }, pin: { position: 'absolute', width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, mapNotice: { position: 'absolute', left: 14, right: 14, bottom: 14, borderRadius: 15, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 9 }, mapNoticeText: { flex: 1, fontSize: 12, lineHeight: 17 }, sectionTitle: { fontSize: 19, fontWeight: '900', paddingTop: 14, paddingBottom: 3 }, row: { minHeight: 72, borderWidth: 1, borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11, borderCurve: 'continuous' }, rowIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, rowCopy: { flex: 1, gap: 4 }, rowTitle: { fontSize: 15, fontWeight: '800' }, rowMeta: { fontSize: 11 }, naverButton: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9 }, naverText: { fontSize: 12, fontWeight: '900' } });
+const styles = StyleSheet.create({ screen: { flex: 1 }, nativeMap: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 34, gap: 10 }, mapPreview: { height: 260, borderWidth: 1, borderRadius: 25, overflow: 'hidden', position: 'relative', borderCurve: 'continuous' }, island: { position: 'absolute', width: '72%', height: '43%', left: '14%', top: '22%', borderRadius: 999, transform: [{ rotate: '-8deg' }], opacity: 0.9 }, pin: { position: 'absolute', width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, mapNotice: { position: 'absolute', left: 14, right: 14, bottom: 14, borderRadius: 15, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 9 }, mapNoticeText: { flex: 1, fontSize: 12, lineHeight: 17 }, sectionTitle: { fontSize: 19, fontWeight: '900', paddingTop: 14, paddingBottom: 3 }, row: { minHeight: 72, borderWidth: 1, borderRadius: 18, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 11, borderCurve: 'continuous' }, rowIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, rowCopy: { flex: 1, gap: 4 }, rowTitle: { fontSize: 15, fontWeight: '800' }, rowMeta: { fontSize: 11 }, mapActions: { flexDirection: 'row', gap: 5 }, naverButton: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 9 }, appleButton: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 9 }, naverText: { fontSize: 11, fontWeight: '900' } });
