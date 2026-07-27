@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
@@ -30,7 +30,7 @@ export function TravelGuideScreen({ id }: { id: string }) {
   const guidePlaces = resolveGuidePlaces(guide, places);
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <AppHeader back title="여행 가이드" />
+      <AppHeader back title="여행 가이드" right={<HapticPressable accessibilityLabel="여행 가이드 공유" feedback="light" onPress={() => void Share.share({ title: guide.title, message: `${guide.title}\n\n${guide.summary}\n\n소랑제주` })} style={styles.shareButton}><Ionicons name="share-outline" size={21} color={colors.text} /></HapticPressable>} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={guide.accent} style={styles.hero}>
           <View style={styles.heroIcon}><Ionicons name={guide.icon as never} size={28} color="#FFFFFF" /></View>
@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
   tipText: { fontSize: 12, lineHeight: 19 },
   sourceCard: { borderWidth: 1, borderRadius: 18, padding: 15, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   sourceText: { flex: 1, fontSize: 11, lineHeight: 17 },
+  shareButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   notFoundTitle: { fontSize: 18, fontWeight: '900' },
 });

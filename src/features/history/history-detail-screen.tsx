@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
@@ -15,7 +15,7 @@ export function HistoryDetailScreen({ id }: { id: string }) {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <AppHeader back title="제주 역사" />
+      <AppHeader back title="제주 역사" right={<HapticPressable accessibilityLabel="제주 역사 이야기 공유" feedback="light" onPress={() => void Share.share({ title: chapter.title, message: `${chapter.title}\n\n${chapter.summary}\n\n소랑제주` })} style={styles.shareButton}><Ionicons name="share-outline" size={21} color={colors.text} /></HapticPressable>} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={chapter.accent} style={styles.hero}>
           <View style={styles.icon}><Ionicons name={chapter.icon as never} size={28} color="#FFFFFF" /></View>
@@ -51,7 +51,7 @@ export function HistoryDetailScreen({ id }: { id: string }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 42, gap: 22 }, flex: { flex: 1 },
+  screen: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 42, gap: 22 }, flex: { flex: 1 }, shareButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
   hero: { minHeight: 285, borderRadius: 28, padding: 23, justifyContent: 'flex-end', overflow: 'hidden', borderCurve: 'continuous' }, icon: { position: 'absolute', top: 22, right: 22, width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' }, period: { color: 'rgba(255,255,255,0.82)', fontSize: 12, fontWeight: '900' }, title: { color: '#FFFFFF', fontFamily: 'NanumOld', fontSize: 30, lineHeight: 40, paddingTop: 7 }, summary: { color: 'rgba(255,255,255,0.88)', fontSize: 13, lineHeight: 21, paddingTop: 8 },
   story: { gap: 12 }, section: { gap: 10 }, sectionTitle: { fontSize: 21, fontWeight: '900' }, paragraph: { fontSize: 15, lineHeight: 25 },
   remembrance: { borderWidth: 1, borderRadius: 20, padding: 17, flexDirection: 'row', alignItems: 'flex-start', gap: 12 }, remembranceTitle: { fontSize: 15, fontWeight: '900' }, remembranceText: { fontSize: 12, lineHeight: 20, paddingTop: 5 },
