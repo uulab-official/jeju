@@ -2,6 +2,12 @@
 
 최종 점검일: 2026-07-27 (Asia/Seoul)
 
+최종 자동 점검 결과: 전체 통과
+
+- Production OTA 최신 배포: iOS `019fa1a4-52ca-766a-8065-6d76039bf5ee`, Android `019fa1a4-52ca-735c-b1a0-f65f2252f9e6`
+- 최신 Android Store 바이너리: versionCode `26072602`, EAS production AAB 빌드 완료
+- App Store Connect: 새 앱의 첫 버전 심사 대기(아직 공개 버전 없음)
+
 ## 자동 검증
 
 - [x] TypeScript, ESLint, Expo Doctor 20/20
@@ -11,6 +17,7 @@
 - [x] 제주 관광·문화 수집기 테스트 5건
 - [x] 데이터 수집 상태 확인: 장소 301건, 문화 콘텐츠 5,000건
 - [x] 릴리스 자산 무결성 및 스크린샷 격리 검사
+- [x] 최신 production OTA 번들 export·무결성 검사·양 플랫폼 publish
 
 실행 명령:
 
