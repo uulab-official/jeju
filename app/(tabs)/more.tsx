@@ -61,7 +61,7 @@ export default function MoreScreen() {
             <Text style={[styles.sectionTitle, { color: colors.muted }]}>{group.title}</Text>
             <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {group.rows.map((row, index) => (
-                <HapticPressable key={row.route} onPress={() => router.push(row.route)} style={[styles.row, index < group.rows.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+                <HapticPressable accessibilityLabel={`${row.label}: ${row.caption}`} key={row.route} onPress={() => router.push(row.route)} style={[styles.row, index < group.rows.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
                   <Ionicons name={row.icon} size={22} color={colors.primaryStrong} />
                   <View style={styles.rowCopy}><Text style={[styles.rowLabel, { color: colors.text }]}>{row.label}</Text><Text style={[styles.rowCaption, { color: colors.muted }]}>{row.caption}</Text></View>
                   <Ionicons name="chevron-forward" size={19} color={colors.muted} />

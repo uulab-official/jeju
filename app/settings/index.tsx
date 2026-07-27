@@ -25,7 +25,7 @@ export default function SettingsScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {rows.map((row, index) => (
-            <HapticPressable key={row.route} onPress={() => router.push(row.route)} style={[styles.row, index < rows.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+            <HapticPressable accessibilityLabel={`${row.label}: ${row.value}`} key={row.route} onPress={() => router.push(row.route)} style={[styles.row, index < rows.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
               <View style={[styles.icon, { backgroundColor: colors.surfaceAlt }]}><Ionicons name={row.icon} size={20} color={colors.primaryStrong} /></View>
               <View style={styles.copy}><Text style={[styles.label, { color: colors.text }]}>{row.label}</Text><Text style={[styles.value, { color: colors.muted }]}>{row.value}</Text></View>
               <Ionicons name="chevron-forward" size={18} color={colors.muted} />
