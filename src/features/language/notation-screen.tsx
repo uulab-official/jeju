@@ -40,7 +40,7 @@ export function NotationScreen() {
           const expanded = open.has(chapterIndex);
           return (
             <View key={chapter.title} style={[styles.chapter, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <HapticPressable accessibilityState={{ expanded }} onPress={() => toggle(chapterIndex)} style={styles.chapterHeader}>
+              <HapticPressable accessibilityLabel={`${chapter.title} ${expanded ? '접기' : '펼치기'}`} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => toggle(chapterIndex)} style={styles.chapterHeader}>
                 <Text style={[styles.chapterTitle, { color: colors.text }]}>{chapter.title}</Text>
                 <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={colors.muted} />
               </HapticPressable>

@@ -28,7 +28,7 @@ export default function FaqScreen() {
           const expanded = open === index;
           return (
             <View key={question} style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <HapticPressable onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpen(expanded ? null : index); }} style={styles.question}>
+              <HapticPressable accessibilityLabel={`${question} ${expanded ? '접기' : '펼치기'}`} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpen(expanded ? null : index); }} style={styles.question}>
                 <Text style={[styles.questionText, { color: colors.text }]}>{question}</Text><Ionicons name={expanded ? 'remove' : 'add'} size={21} color={colors.primaryStrong} />
               </HapticPressable>
               {expanded ? <Text style={[styles.answer, { color: colors.muted, borderTopColor: colors.border }]}>{answer}</Text> : null}
