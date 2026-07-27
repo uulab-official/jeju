@@ -208,7 +208,16 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
       if (!value) return;
       try {
         const parsed = JSON.parse(value) as unknown;
-        if (Array.isArray(parsed)) setNotifications(parsed.filter(isInboxItem).slice(0, MAX_INBOX_ITEMS));
+        if (Array.isArray(parsed)) {
+          const restored = parsed.filter(isInboxItem);
+          setNotifications((current) => {
+            const merged = new Map<string, PushInboxItem>();
+            [...current, ...restored].forEach((item) => merged.set(item.id, item));
+            return [...merged.values()]
+              .sort((a, b) => Date.parse(b.receivedAt) - Date.parse(a.receivedAt))
+              .slice(0, MAX_INBOX_ITEMS);
+          });
+        }
       } catch {
         // A malformed inbox must not block notification registration.
       }
