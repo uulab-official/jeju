@@ -17,7 +17,7 @@ export function DiscoverScreen() {
   const listRef = useRef<FlatList>(null);
   useScrollToTop(listRef);
   const params = useLocalSearchParams<{ category?: string }>();
-  const { places: allPlaces, refreshing, refresh, source, lastUpdatedAt } = usePlaceData();
+  const { places: allPlaces, refreshing, refresh, source, lastUpdatedAt, error } = usePlaceData();
   const [query, setQuery] = useState('');
   const category: PlaceCategory | 'all' = placeCategories.find((item) => item.id === params.category)?.id ?? 'all';
   const places = useMemo(() => {
@@ -33,6 +33,7 @@ export function DiscoverScreen() {
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <AppHeader title="발견" subtitle="액티비티·여행지·문화" />
       <View style={styles.search}><SearchField value={query} onChangeText={setQuery} /></View>
+      {error ? <View accessibilityLiveRegion="polite" style={[styles.errorBanner, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}><Ionicons name="cloud-offline-outline" size={18} color={colors.danger} /><Text selectable style={[styles.errorText, { color: colors.text }]}>{source === 'cache' ? '저장된 정보로 표시 중이에요.' : '최신 정보를 불러오지 못했어요.'}</Text><HapticPressable accessibilityLabel="장소 데이터 다시 시도" feedback="light" onPress={() => void refresh()}><Text style={[styles.errorAction, { color: colors.primaryStrong }]}>재시도</Text></HapticPressable></View> : null}
       <ScrollView horizontal contentContainerStyle={styles.filters} showsHorizontalScrollIndicator={false}>
         {placeCategories.map((item) => {
           const selected = category === item.id;
@@ -54,7 +55,7 @@ export function DiscoverScreen() {
   );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, search: { paddingHorizontal: 18, paddingBottom: 10 }, filters: { paddingHorizontal: 18, gap: 8, paddingBottom: 14 }, filter: { height: 38, borderWidth: 1, borderRadius: 999, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 6 }, filterText: { fontSize: 12, fontWeight: '800' }, list: { paddingHorizontal: 18, paddingBottom: 34, flexGrow: 1 }, count: { fontSize: 12, paddingBottom: 10 }, separator: { height: 12 }, empty: { alignItems: 'center', paddingVertical: 60, gap: 8 }, emptyTitle: { fontSize: 16, fontWeight: '800' }, emptyText: { fontSize: 13 } });
+const styles = StyleSheet.create({ screen: { flex: 1 }, search: { paddingHorizontal: 18, paddingBottom: 10 }, errorBanner: { marginHorizontal: 18, marginBottom: 10, minHeight: 44, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }, errorText: { flex: 1, fontSize: 12, lineHeight: 17 }, errorAction: { fontSize: 12, fontWeight: '800' }, filters: { paddingHorizontal: 18, gap: 8, paddingBottom: 14 }, filter: { height: 38, borderWidth: 1, borderRadius: 999, paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', gap: 6 }, filterText: { fontSize: 12, fontWeight: '800' }, list: { paddingHorizontal: 18, paddingBottom: 34, flexGrow: 1 }, count: { fontSize: 12, paddingBottom: 10 }, separator: { height: 12 }, empty: { alignItems: 'center', paddingVertical: 60, gap: 8 }, emptyTitle: { fontSize: 16, fontWeight: '800' }, emptyText: { fontSize: 13 } });
 
 const sourceLabel = { bundled: '기본 정보', cache: '저장된 정보', remote: '공식 데이터' } as const;
 
