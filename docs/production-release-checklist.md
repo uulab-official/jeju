@@ -7,6 +7,8 @@
 - Production OTA 최신 배포: iOS `019fa1a4-52ca-766a-8065-6d76039bf5ee`, Android `019fa1a4-52ca-735c-b1a0-f65f2252f9e6`
 - 최신 Android Store 바이너리: versionCode `26072602`, EAS production AAB 빌드 완료
 - App Store Connect: 새 앱의 첫 버전 심사 대기(아직 공개 버전 없음)
+- Apple 대응: `ITMS-90683` 위치 권한 purpose string 누락 수정, iOS build `26072701` 재제출 완료
+- Google Play: 제출 ID `3`이 현재 `검토 중`; 이전 제출 ID `1`, `2`는 거절이 아닌 취소 상태
 
 ## 자동 검증
 
