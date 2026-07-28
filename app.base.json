@@ -22,7 +22,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "kr.co.uulab.jeju",
-      "buildNumber": "26072701",
+      "buildNumber": "26072801",
       "supportsTablet": false,
       "entitlements": {
         "aps-environment": "production"
