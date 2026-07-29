@@ -7,6 +7,8 @@ const sharp = require('sharp');
 const root = path.resolve(__dirname, '..');
 const imagePath = (name) => path.join(root, 'assets', 'images', name);
 const failures = [];
+const storeIconPath = (locale) =>
+  path.join(root, 'fastlane', 'metadata', 'android', locale, 'images', 'icon.png');
 
 const assets = [
   { name: 'icon.png', width: 1024, height: 1024, opaque: true },
@@ -85,8 +87,53 @@ async function inspectAsset(spec) {
   }
 }
 
+async function inspectGooglePlayIcon(locale) {
+  const file = storeIconPath(locale);
+  if (!fs.existsSync(file)) {
+    failures.push(`Google Play ${locale} icon is missing.`);
+    return;
+  }
+
+  const metadata = await sharp(file).metadata();
+  if (metadata.width !== 512 || metadata.height !== 512) {
+    failures.push(
+      `Google Play ${locale} icon must be 512x512, got ${metadata.width}x${metadata.height}.`,
+    );
+  }
+  if (metadata.hasAlpha) {
+    const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    let transparentPixels = 0;
+    for (let offset = 3; offset < data.length; offset += info.channels) {
+      if (data[offset] !== 255) transparentPixels += 1;
+    }
+    if (transparentPixels > 0) {
+      failures.push(`Google Play ${locale} icon must be fully opaque.`);
+    }
+  }
+
+  const [launcherPixels, storePixels] = await Promise.all([
+    sharp(imagePath('icon.png')).resize(512, 512).removeAlpha().raw().toBuffer(),
+    sharp(file).resize(512, 512).removeAlpha().raw().toBuffer(),
+  ]);
+  let absoluteDifference = 0;
+  for (let index = 0; index < launcherPixels.length; index += 1) {
+    absoluteDifference += Math.abs(launcherPixels[index] - storePixels[index]);
+  }
+  const meanAbsoluteDifference = absoluteDifference / launcherPixels.length;
+  if (meanAbsoluteDifference > 2.5) {
+    failures.push(
+      `Google Play ${locale} icon does not match the installed launcher icon ` +
+        `(mean pixel difference ${meanAbsoluteDifference.toFixed(2)}).`,
+    );
+  }
+}
+
 async function main() {
-  await Promise.all(assets.map(inspectAsset));
+  await Promise.all([
+    ...assets.map(inspectAsset),
+    inspectGooglePlayIcon('ko-KR'),
+    inspectGooglePlayIcon('en-US'),
+  ]);
 
   const appConfig = JSON.parse(fs.readFileSync(path.join(root, 'app.base.json'), 'utf8')).expo;
   const splashPlugin = appConfig.plugins.find(
@@ -130,7 +177,9 @@ async function main() {
     for (const failure of failures) console.error(`- ${failure}`);
     process.exit(1);
   }
-  console.log('Visual asset check passed: launcher, adaptive, monochrome, notification, favicon, and splash assets.');
+  console.log(
+    'Visual asset check passed: launcher, Google Play, adaptive, monochrome, notification, favicon, and splash assets.',
+  );
 }
 
 main().catch((error) => {

@@ -11,6 +11,7 @@ const rows = [
   { label: '화면 테마', value: '시스템·라이트·다크', icon: 'contrast-outline', route: '/settings/theme' },
   { label: '제주 소식 알림', value: '축제·여행 정보와 새 콘텐츠', icon: 'notifications-outline', route: '/settings/notifications' },
   { label: '데이터 상태', value: '공공데이터 갱신·출처 확인', icon: 'cloud-done-outline', route: '/settings/data-status' },
+  { label: '공지사항', value: '업데이트와 서비스 안내', icon: 'megaphone-outline', route: '/settings/notices' },
   { label: '자주 묻는 질문', value: '이용 방법과 데이터 안내', icon: 'help-circle-outline', route: '/settings/faq' },
   { label: '개인정보 처리방침', value: '저장 정보 확인', icon: 'shield-checkmark-outline', route: '/settings/privacy' },
   { label: '이용약관', value: '서비스 이용 기준', icon: 'document-text-outline', route: '/settings/terms' },

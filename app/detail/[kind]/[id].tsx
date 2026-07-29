@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
-import { EmptyState, ListSkeleton } from '@/src/components/ContentState';
+import { DetailSkeleton, EmptyState } from '@/src/components/ContentState';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useFavorites } from '@/src/providers/FavoritesProvider';
 import { useJejuData } from '@/src/providers/JejuDataProvider';
@@ -41,7 +41,7 @@ export default function DetailScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <AppHeader back title={resourceMeta[kind].shortLabel} right={right} />
-      {(state.loading || state.refreshing) && !item ? <ListSkeleton rows={5} /> : !item ? (
+      {(state.loading || state.refreshing) && !item ? <DetailSkeleton media={false} /> : !item ? (
         <EmptyState icon="alert-circle-outline" title="자료를 찾지 못했어요" message={state.error ?? '데이터가 갱신되었거나 주소가 올바르지 않을 수 있어요.'} />
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

@@ -9,5 +9,5 @@ const sections = [
 ];
 
 export default function PrivacyScreen() {
-  return <LegalScreen title="개인정보 처리방침" sections={sections} />;
+  return <LegalScreen title="개인정보 처리방침" sections={sections} externalUrl="https://uulab.co.kr/privacy" />;
 }

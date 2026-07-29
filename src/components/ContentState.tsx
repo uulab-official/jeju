@@ -4,9 +4,9 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout } from '@/src/theme/tokens';
 
-export function ListSkeleton({ rows = 5 }: { rows?: number }) {
-  const { colors } = useAppTheme();
+function usePulseOpacity() {
   const [opacity] = useState(() => new Animated.Value(0.45));
   useEffect(() => {
     const animation = Animated.loop(
@@ -18,6 +18,12 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
     animation.start();
     return () => animation.stop();
   }, [opacity]);
+  return opacity;
+}
+
+export function ListSkeleton({ rows = 5 }: { rows?: number }) {
+  const { colors } = useAppTheme();
+  const opacity = usePulseOpacity();
   return (
     <View accessibilityLabel="목록을 불러오는 중" style={styles.skeletonList}>
       {Array.from({ length: rows }).map((_, index) => (
@@ -30,6 +36,35 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
         </Animated.View>
       ))}
     </View>
+  );
+}
+
+export function DetailSkeleton({ media = true }: { media?: boolean }) {
+  const { colors } = useAppTheme();
+  const opacity = usePulseOpacity();
+  const block = { backgroundColor: colors.border, opacity };
+
+  return (
+    <Animated.ScrollView
+      accessibilityLabel="상세 정보를 불러오는 중"
+      contentContainerStyle={styles.detailSkeleton}
+      showsVerticalScrollIndicator={false}
+      style={{ opacity: 1 }}
+    >
+      {media ? <Animated.View style={[styles.detailHero, block]} /> : null}
+      <View style={styles.detailCopy}>
+        <Animated.View style={[styles.detailEyebrow, block]} />
+        <Animated.View style={[styles.detailTitle, block]} />
+        <Animated.View style={[styles.detailLine, block]} />
+        <Animated.View style={[styles.detailLineShort, block]} />
+      </View>
+      <Animated.View style={[styles.detailCard, block]} />
+      <Animated.View style={[styles.detailCard, block]} />
+      <View style={styles.detailActions}>
+        <Animated.View style={[styles.detailAction, block]} />
+        <Animated.View style={[styles.detailAction, block]} />
+      </View>
+    </Animated.ScrollView>
   );
 }
 
@@ -59,7 +94,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry: () 
 }
 
 const styles = StyleSheet.create({
-  skeletonList: { gap: 10, paddingHorizontal: 18, paddingTop: 8 },
+  skeletonList: { gap: 10, paddingHorizontal: layout.screenPadding, paddingTop: 8 },
   skeletonRow: { height: 88, borderRadius: 17, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   skeletonCircle: { width: 42, height: 42, borderRadius: 13 },
   skeletonCopy: { flex: 1, gap: 9 },
@@ -70,4 +105,14 @@ const styles = StyleSheet.create({
   stateMessage: { fontSize: 14, lineHeight: 21, textAlign: 'center' },
   retry: { marginTop: 8, minHeight: 44, paddingHorizontal: 22, borderRadius: 14, justifyContent: 'center' },
   retryText: { fontWeight: '800' },
+  detailSkeleton: { paddingHorizontal: layout.screenPadding, paddingBottom: layout.screenBottomPadding, gap: 14 },
+  detailHero: { height: 220, borderRadius: 26 },
+  detailCopy: { gap: 10, paddingTop: 3 },
+  detailEyebrow: { width: 88, height: 12, borderRadius: 7 },
+  detailTitle: { width: '72%', height: 28, borderRadius: 9 },
+  detailLine: { width: '100%', height: 15, borderRadius: 8 },
+  detailLineShort: { width: '68%', height: 15, borderRadius: 8 },
+  detailCard: { height: 112, borderRadius: 20 },
+  detailActions: { flexDirection: 'row', gap: 10 },
+  detailAction: { flex: 1, height: 52, borderRadius: 16 },
 });

@@ -9,5 +9,5 @@ const sections = [
 ];
 
 export default function TermsScreen() {
-  return <LegalScreen title="이용약관" sections={sections} />;
+  return <LegalScreen title="이용약관" sections={sections} externalUrl="https://uulab.co.kr/terms" />;
 }

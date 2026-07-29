@@ -158,6 +158,7 @@ function Navigation() {
         <Stack.Screen name="history/[id]" />
         <Stack.Screen name="language/search" />
         <Stack.Screen name="language/notation" />
+        <Stack.Screen name="media/[placeId]" options={{ presentation: 'transparentModal', animation: 'fade' }} />
         <Stack.Screen name="notifications/index" />
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/theme" />
@@ -165,6 +166,7 @@ function Navigation() {
         <Stack.Screen name="settings/data-status" />
         <Stack.Screen name="settings/support" />
         <Stack.Screen name="settings/about" />
+        <Stack.Screen name="settings/notices" />
         <Stack.Screen name="settings/faq" />
         <Stack.Screen name="settings/privacy" />
         <Stack.Screen name="settings/terms" />
