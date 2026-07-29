@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import * as Updates from 'expo-updates';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
@@ -8,11 +8,22 @@ import { useAppTheme } from '@/src/providers/AppThemeProvider';
 export default function AboutScreen() {
   const { colors } = useAppTheme();
   const config = Constants.expoConfig;
+  const nativeIdentifier = Platform.select({
+    ios: config?.ios?.bundleIdentifier,
+    android: config?.android?.package,
+    default: undefined,
+  }) ?? 'kr.co.uulab.jeju';
+  const nativeBuild = Platform.select({
+    ios: config?.ios?.buildNumber,
+    android: config?.android?.versionCode ? String(config.android.versionCode) : undefined,
+    default: undefined,
+  }) ?? '-';
   const rows = [
     ['앱 버전', config?.version ?? '1.0.0'],
+    ['빌드 번호', nativeBuild],
     ['런타임', String(config?.runtimeVersion ?? config?.version ?? '-')],
     ['업데이트 채널', Updates.channel ?? (__DEV__ ? 'development' : 'embedded')],
-    ['앱 식별자', config?.android?.package ?? config?.ios?.bundleIdentifier ?? 'kr.co.uulab.jeju'],
+    ['앱 식별자', nativeIdentifier],
   ];
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
