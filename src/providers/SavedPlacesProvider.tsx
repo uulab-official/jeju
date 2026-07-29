@@ -5,6 +5,7 @@ const STORAGE_KEY = '@jeju/saved-places/v1';
 
 type SavedPlacesContextValue = {
   savedIds: ReadonlySet<string>;
+  ready: boolean;
   toggleSaved: (id: string) => void;
   isSaved: (id: string) => boolean;
 };
@@ -13,6 +14,7 @@ const SavedPlacesContext = createContext<SavedPlacesContextValue | null>(null);
 
 export function SavedPlacesProvider({ children }: PropsWithChildren) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     void AsyncStorage.getItem(STORAGE_KEY).then((value) => {
@@ -22,7 +24,7 @@ export function SavedPlacesProvider({ children }: PropsWithChildren) {
       } catch {
         void AsyncStorage.removeItem(STORAGE_KEY);
       }
-    });
+    }).catch(() => undefined).finally(() => setReady(true));
   }, []);
 
   const toggleSaved = useCallback((id: string) => {
@@ -35,7 +37,7 @@ export function SavedPlacesProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const value = useMemo(() => ({ savedIds, toggleSaved, isSaved: (id: string) => savedIds.has(id) }), [savedIds, toggleSaved]);
+  const value = useMemo(() => ({ savedIds, ready, toggleSaved, isSaved: (id: string) => savedIds.has(id) }), [ready, savedIds, toggleSaved]);
   return <SavedPlacesContext.Provider value={value}>{children}</SavedPlacesContext.Provider>;
 }
 

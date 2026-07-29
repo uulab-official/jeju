@@ -34,7 +34,7 @@ export function NotificationListScreen() {
             <Ionicons name="notifications-outline" size={30} color={colors.primaryStrong} />
           </View>
           <Text style={[styles.title, { color: colors.text }]}>아직 도착한 소식이 없어요</Text>
-          <Text style={[styles.body, { color: colors.muted }]}>계절 여행지, 제주 축제와 새 문화 콘텐츠를 준비되는 대로 알려드릴게요.</Text>
+          <Text style={[styles.body, { color: colors.muted }]}>계절 여행지, 제주 축제와 새로운 문화 콘텐츠 소식을 전해드릴게요.</Text>
           <HapticPressable feedback="medium" onPress={() => router.push('/settings/notifications')} style={[styles.button, { backgroundColor: colors.primary }]}>
             <Text style={[styles.buttonText, { color: colors.onPrimary }]}>알림 설정하기</Text>
           </HapticPressable>

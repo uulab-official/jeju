@@ -95,14 +95,17 @@ async function shouldSyncPushInstallation() {
     || Date.now() - Date.parse(lastSyncedAt) >= PUSH_SYNC_FRESHNESS_MS;
 }
 
-function notificationRoute(response: Notifications.NotificationResponse) {
-  if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return null;
-  const target = response.notification.request.content.data?.route;
+function safeNotificationRoute(target: unknown) {
   if (typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')) {
     const root = target.split(/[/?#]/).filter(Boolean)[0];
     if (root && ALLOWED_ROUTE_ROOTS.has(root)) return target;
   }
   return null;
+}
+
+function notificationRoute(response: Notifications.NotificationResponse) {
+  if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return null;
+  return safeNotificationRoute(response.notification.request.content.data?.route);
 }
 
 export function PushNotificationsProvider({ children }: PropsWithChildren) {
@@ -116,7 +119,7 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
     const content = request.content;
     const title = typeof content.title === 'string' && content.title.trim() ? content.title.trim() : '제주 소식';
     const body = typeof content.body === 'string' ? content.body.trim() : '';
-    const route = typeof content.data?.route === 'string' ? content.data.route : undefined;
+    const route = safeNotificationRoute(content.data?.route) ?? undefined;
     const item: PushInboxItem = { id: request.identifier, title, body, receivedAt: new Date().toISOString(), route };
     setNotifications((current) => {
       if (current.some((entry) => entry.id === item.id)) return current;
@@ -209,7 +212,9 @@ export function PushNotificationsProvider({ children }: PropsWithChildren) {
       try {
         const parsed = JSON.parse(value) as unknown;
         if (Array.isArray(parsed)) {
-          const restored = parsed.filter(isInboxItem);
+          const restored = parsed
+            .filter(isInboxItem)
+            .map((item) => ({ ...item, route: safeNotificationRoute(item.route) ?? undefined }));
           setNotifications((current) => {
             const merged = new Map<string, PushInboxItem>();
             [...current, ...restored].forEach((item) => merged.set(item.id, item));

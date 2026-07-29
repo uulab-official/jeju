@@ -40,6 +40,22 @@ export async function searchCultureItems(query: string, kind?: ResourceKind): Pr
   return (payload.rows as AppwriteRow[]).map(toItem).filter((item): item is JejuItem => Boolean(item));
 }
 
+export async function fetchCultureItem(kind: ResourceKind, id: string): Promise<JejuItem | undefined> {
+  const payload = await withTimeout(tablesDB.listRows({
+    databaseId: APPWRITE_DATABASE_ID,
+    tableId: APPWRITE_CULTURE_TABLE_ID,
+    queries: [
+      Query.equal('active', true),
+      Query.equal('kind', kind),
+      Query.equal('externalId', id),
+      Query.limit(1),
+    ],
+    total: false,
+    ttl: 300,
+  }), FETCH_TIMEOUT_MS);
+  return (payload.rows as AppwriteRow[]).map(toItem).find((item): item is JejuItem => Boolean(item));
+}
+
 function pageFromRows(rows: AppwriteRow[], total: number): CulturePage {
   const items = rows.map(toItem).filter((item): item is JejuItem => Boolean(item));
   const nextCursor = rows.at(-1)?.$id;

@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 
-import { fetchCulturePage, getCultureBackendConfig } from '@/src/services/appwriteCulture';
+import { fetchCultureItem, fetchCulturePage, getCultureBackendConfig } from '@/src/services/appwriteCulture';
 import { JejuItem, ResourceKind, resourceKinds } from '@/src/types/jeju';
 
 type ResourceCache = {
@@ -38,6 +38,8 @@ type ContextValue = {
   refresh: (kind?: ResourceKind) => Promise<void>;
   loadMore: (kind: ResourceKind) => Promise<void>;
   findItem: (kind: ResourceKind, id: string) => JejuItem | undefined;
+  rememberItem: (item: JejuItem) => void;
+  resolveItem: (kind: ResourceKind, id: string) => Promise<JejuItem | undefined>;
 };
 
 const emptyState = (): ResourceState => ({ items: [], loading: true, refreshing: false, loadingMore: false, hasMore: true, totalCount: 0, fromCache: false });
@@ -53,6 +55,7 @@ function cacheKey(kind: ResourceKind) {
 
 export function JejuDataProvider({ children }: PropsWithChildren) {
   const [resources, setResources] = useState(initialResources);
+  const [resolvedItems, setResolvedItems] = useState<Record<string, JejuItem>>({});
   const backendConfigured = Boolean(getCultureBackendConfig());
 
   const load = useCallback(async (kind: ResourceKind, manual = false) => {
@@ -162,14 +165,31 @@ export function JejuDataProvider({ children }: PropsWithChildren) {
     [load],
   );
 
-  const allItems = useMemo(() => resourceKinds.flatMap((kind) => resources[kind].items), [resources]);
+  const allItems = useMemo(() => {
+    const merged = new Map<string, JejuItem>();
+    resourceKinds.flatMap((kind) => resources[kind].items).forEach((item) => merged.set(`${item.kind}:${item.id}`, item));
+    Object.values(resolvedItems).forEach((item) => merged.set(`${item.kind}:${item.id}`, item));
+    return [...merged.values()];
+  }, [resolvedItems, resources]);
   const findItem = useCallback(
-    (kind: ResourceKind, id: string) => resources[kind].items.find((item) => item.id === id),
-    [resources],
+    (kind: ResourceKind, id: string) => resources[kind].items.find((item) => item.id === id) ?? resolvedItems[`${kind}:${id}`],
+    [resolvedItems, resources],
   );
+  const rememberItem = useCallback((item: JejuItem) => {
+    setResolvedItems((current) => {
+      const key = `${item.kind}:${item.id}`;
+      if (current[key] === item) return current;
+      return { ...current, [key]: item };
+    });
+  }, []);
+  const resolveItem = useCallback(async (kind: ResourceKind, id: string) => {
+    const item = await fetchCultureItem(kind, id);
+    if (item) rememberItem(item);
+    return item;
+  }, [rememberItem]);
 
   return (
-    <DataContext.Provider value={{ resources, allItems, refresh, loadMore, findItem }}>
+    <DataContext.Provider value={{ resources, allItems, refresh, loadMore, findItem, rememberItem, resolveItem }}>
       {children}
     </DataContext.Provider>
   );

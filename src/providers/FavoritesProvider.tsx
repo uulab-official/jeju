@@ -6,6 +6,7 @@ import { ResourceKind } from '@/src/types/jeju';
 const STORAGE_KEY = '@jeju/favorites/v1';
 const FavoritesContext = createContext<{
   favoriteKeys: Set<string>;
+  ready: boolean;
   isFavorite: (kind: ResourceKind, id: string) => boolean;
   toggleFavorite: (kind: ResourceKind, id: string) => boolean;
 } | null>(null);
@@ -16,9 +17,10 @@ export function itemKey(kind: ResourceKind, id: string) {
 
 export function FavoritesProvider({ children }: PropsWithChildren) {
   const [keys, setKeys] = useState<string[]>([]);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
+    void AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
       if (!saved) return;
       try {
         const parsed = JSON.parse(saved) as unknown;
@@ -26,7 +28,7 @@ export function FavoritesProvider({ children }: PropsWithChildren) {
       } catch {
         // Ignore invalid legacy cache.
       }
-    });
+    }).catch(() => undefined).finally(() => setReady(true));
   }, []);
 
   const favoriteKeys = useMemo(() => new Set(keys), [keys]);
@@ -46,7 +48,7 @@ export function FavoritesProvider({ children }: PropsWithChildren) {
   );
 
   return (
-    <FavoritesContext.Provider value={{ favoriteKeys, isFavorite, toggleFavorite }}>
+    <FavoritesContext.Provider value={{ favoriteKeys, ready, isFavorite, toggleFavorite }}>
       {children}
     </FavoritesContext.Provider>
   );

@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
@@ -18,14 +18,43 @@ export default function DetailScreen() {
   const kind = resourceKinds.includes(params.kind as ResourceKind) ? (params.kind as ResourceKind) : 'dictionary';
   const id = decodeURIComponent(params.id ?? '');
   const { colors } = useAppTheme();
-  const { resources, findItem, refresh } = useJejuData();
+  const { resources, findItem, refresh, resolveItem } = useJejuData();
   const { isFavorite, toggleFavorite } = useFavorites();
   const state = resources[kind];
   const item = findItem(kind, id);
+  const detailKey = `${kind}:${id}`;
+  const [resolution, setResolution] = useState<{ key: string; loading: boolean; error?: string }>({
+    key: detailKey,
+    loading: !item,
+  });
+  const resolving = !item && (resolution.key !== detailKey || resolution.loading);
+  const resolveError = resolution.key === detailKey ? resolution.error : undefined;
   const player = useAudioPlayer(item?.audioUrl ?? null);
   const audioStatus = useAudioPlayerStatus(player);
 
   useEffect(() => () => player.pause(), [player]);
+  useEffect(() => {
+    if (item) return;
+    let active = true;
+    void resolveItem(kind, id).then((resolved) => {
+      if (!active) return;
+      setResolution({
+        key: detailKey,
+        loading: false,
+        error: resolved ? undefined : '요청한 자료를 찾지 못했어요.',
+      });
+    }).catch((cause) => {
+      if (!active) return;
+      setResolution({
+        key: detailKey,
+        loading: false,
+        error: cause instanceof Error ? cause.message : '자료를 확인하지 못했습니다.',
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [detailKey, id, item, kind, resolveItem]);
 
   const right = item ? (
     <View style={styles.actions}>
@@ -41,8 +70,8 @@ export default function DetailScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <AppHeader back title={resourceMeta[kind].shortLabel} right={right} />
-      {(state.loading || state.refreshing) && !item ? <DetailSkeleton media={false} /> : !item ? (
-        <EmptyState icon="alert-circle-outline" title="자료를 찾지 못했어요" message={state.error ?? '데이터가 갱신되었거나 주소가 올바르지 않을 수 있어요.'} />
+      {(state.loading || resolving) && !item ? <DetailSkeleton media={false} /> : !item ? (
+        <EmptyState icon="alert-circle-outline" title="자료를 찾지 못했어요" message={resolveError ?? state.error ?? '데이터가 갱신되었거나 주소가 올바르지 않을 수 있어요.'} />
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {item.imageUrl ? <Image source={{ uri: item.imageUrl }} contentFit="cover" style={[styles.image, { backgroundColor: colors.surfaceAlt }]} transition={180} /> : null}

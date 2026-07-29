@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useFavorites } from '@/src/providers/FavoritesProvider';
+import { useJejuData } from '@/src/providers/JejuDataProvider';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { JejuItem, resourceMeta } from '@/src/types/jeju';
 import { radius, typography } from '@/src/theme/tokens';
@@ -11,12 +12,16 @@ import { radius, typography } from '@/src/theme/tokens';
 export function ItemRow({ item, showKind = false }: { item: JejuItem; showKind?: boolean }) {
   const { colors } = useAppTheme();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { rememberItem } = useJejuData();
   const saved = isFavorite(item.kind, item.id);
 
   return (
     <HapticPressable
       accessibilityRole="button"
-      onPress={() => router.push({ pathname: '/detail/[kind]/[id]', params: { kind: item.kind, id: item.id } })}
+      onPress={() => {
+        rememberItem(item);
+        router.push({ pathname: '/detail/[kind]/[id]', params: { kind: item.kind, id: item.id } });
+      }}
       style={({ pressed }) => [
         styles.row,
         { backgroundColor: pressed ? colors.surfaceAlt : colors.surface, borderColor: colors.border },

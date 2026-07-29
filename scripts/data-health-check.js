@@ -18,6 +18,10 @@ const headers = {
   'X-Appwrite-Key': apiKey,
   Accept: 'application/json',
 };
+const publicHeaders = {
+  'X-Appwrite-Project': projectId,
+  Accept: 'application/json',
+};
 
 async function main() {
   const problems = [];
@@ -39,6 +43,13 @@ async function main() {
   const [places, cultureItems] = await Promise.all([
     get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/places/rows?limit=1`),
     get(`/tablesdb/${encodeURIComponent(databaseId)}/tables/culture_items/rows?limit=1`),
+  ]);
+  const publicListQueries = new URLSearchParams({ total: 'false' });
+  publicListQueries.append('queries[]', JSON.stringify({ method: 'equal', attribute: 'active', values: [true] }));
+  publicListQueries.append('queries[]', JSON.stringify({ method: 'limit', values: [1] }));
+  const [publicPlaces, publicCultureItems] = await Promise.all([
+    getPublic(`/tablesdb/${encodeURIComponent(databaseId)}/tables/places/rows?${publicListQueries.toString()}`),
+    getPublic(`/tablesdb/${encodeURIComponent(databaseId)}/tables/culture_items/rows?${publicListQueries.toString()}`),
   ]);
   const rows = Array.isArray(syncRuns.rows) ? syncRuns.rows : [];
   const latestTourism = rows
@@ -65,6 +76,24 @@ async function main() {
   });
   if (Number(places.total || 0) < 1) problems.push('places 테이블에 수집된 TourAPI 관광정보가 없습니다.');
   if (Number(cultureItems.total || 0) < 1) problems.push('culture_items 테이블에 수집된 제주어 데이터가 없습니다.');
+  if (!Array.isArray(publicPlaces.rows) || !publicPlaces.rows.length) problems.push('앱 권한으로 places 공개 데이터를 조회할 수 없습니다.');
+  if (!Array.isArray(publicCultureItems.rows) || !publicCultureItems.rows.length) problems.push('앱 권한으로 culture_items 공개 데이터를 조회할 수 없습니다.');
+
+  const cultureSample = publicCultureItems.rows?.[0]?.data || publicCultureItems.rows?.[0];
+  if (cultureSample?.externalId && cultureSample?.kind) {
+    const detailQueries = new URLSearchParams({ total: 'false' });
+    detailQueries.append('queries[]', JSON.stringify({ method: 'equal', attribute: 'active', values: [true] }));
+    detailQueries.append('queries[]', JSON.stringify({ method: 'equal', attribute: 'kind', values: [cultureSample.kind] }));
+    detailQueries.append('queries[]', JSON.stringify({ method: 'equal', attribute: 'externalId', values: [cultureSample.externalId] }));
+    detailQueries.append('queries[]', JSON.stringify({ method: 'limit', values: [1] }));
+    const detail = await getPublic(`/tablesdb/${encodeURIComponent(databaseId)}/tables/culture_items/rows?${detailQueries.toString()}`);
+    const detailRow = detail.rows?.[0]?.data || detail.rows?.[0];
+    if (detailRow?.externalId !== cultureSample.externalId) {
+      problems.push('제주어 검색 결과의 상세 직접 조회가 일치하지 않습니다.');
+    }
+  } else {
+    problems.push('제주어 공개 데이터에 상세 조회용 externalId 또는 kind가 없습니다.');
+  }
 
   if (problems.length) {
     console.error('데이터 헬스체크 실패:');
@@ -139,7 +168,15 @@ function checkSync(latest, problems, options) {
 }
 
 async function get(path) {
-  const response = await fetch(`${endpoint}${path}`, { headers });
+  return request(path, headers);
+}
+
+async function getPublic(path) {
+  return request(path, publicHeaders);
+}
+
+async function request(path, requestHeaders) {
+  const response = await fetch(`${endpoint}${path}`, { headers: requestHeaders });
   const body = await response.text();
   let payload;
   try {
