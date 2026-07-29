@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { ThemeMode, useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout, typography } from '@/src/theme/tokens';
 
 const options: { mode: ThemeMode; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { mode: 'system', label: '시스템 설정', description: '기기의 화면 모드를 따라가요.', icon: 'phone-portrait-outline' },
@@ -32,4 +33,4 @@ export default function ThemeScreen() {
   );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: 18, gap: 12 }, row: { minHeight: 82, borderWidth: 1.5, borderRadius: 18, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 13 }, icon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }, label: { fontSize: 16, fontWeight: '800', marginBottom: 4 }, description: { fontSize: 12 } });
+const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: layout.screenPadding, gap: 12 }, row: { minHeight: 82, borderWidth: 1.5, borderRadius: 18, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 13 }, icon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }, label: { ...typography.subheading, marginBottom: 4 }, description: { ...typography.caption } });

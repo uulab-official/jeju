@@ -5,6 +5,7 @@ import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { usePushNotifications } from '@/src/providers/PushNotificationsProvider';
+import { layout, typography } from '@/src/theme/tokens';
 
 const labels = {
   checking: '알림 상태를 확인하고 있어요',
@@ -61,15 +62,15 @@ export default function NotificationSettingsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { padding: 18, gap: 14 },
+  content: { padding: layout.screenPadding, gap: 14 },
   hero: { borderWidth: 1, borderRadius: 24, padding: 24, alignItems: 'center' },
   icon: { width: 62, height: 62, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  title: { fontSize: 19, fontWeight: '800', textAlign: 'center' },
-  copy: { fontSize: 14, lineHeight: 21, textAlign: 'center', marginTop: 9 },
+  title: { ...typography.heading, fontSize: 19, textAlign: 'center' },
+  copy: { ...typography.body, textAlign: 'center', marginTop: 9 },
   card: { borderWidth: 1, borderRadius: 18, padding: 18, gap: 8 },
-  cardTitle: { fontSize: 15, fontWeight: '800', marginBottom: 2 },
-  item: { fontSize: 13, lineHeight: 20 },
-  error: { fontSize: 13, lineHeight: 20, textAlign: 'center' },
+  cardTitle: { ...typography.subheading, fontSize: 15, marginBottom: 2 },
+  item: { ...typography.body, fontSize: 13, lineHeight: 20 },
+  error: { ...typography.body, fontSize: 13, lineHeight: 20, textAlign: 'center' },
   button: { minHeight: 54, borderWidth: 1, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   buttonText: { fontSize: 15, fontWeight: '800' },
   settingsButton: { minHeight: 48, borderWidth: 1, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },

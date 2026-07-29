@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout, typography } from '@/src/theme/tokens';
 
 const rows = [
   { label: '화면 테마', value: '시스템·라이트·다크', icon: 'contrast-outline', route: '/settings/theme' },
@@ -37,4 +38,4 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: 18 }, group: { borderWidth: 1, borderRadius: 20, overflow: 'hidden' }, row: { minHeight: 76, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12 }, icon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, copy: { flex: 1, gap: 3 }, label: { fontSize: 15, fontWeight: '700' }, value: { fontSize: 12 } });
+const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: layout.screenPadding }, group: { borderWidth: 1, borderRadius: 20, overflow: 'hidden' }, row: { minHeight: 76, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 12 }, icon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, copy: { flex: 1, gap: 3 }, label: { ...typography.subheading, fontSize: 15 }, value: { ...typography.caption } });

@@ -12,6 +12,7 @@ import { PlaceCard } from '@/src/features/discover/components/place-card';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { useJejuData } from '@/src/providers/JejuDataProvider';
 import { usePlaceData } from '@/src/providers/PlaceDataProvider';
+import { layout } from '@/src/theme/tokens';
 import { resourceKinds, resourceMeta } from '@/src/types/jeju';
 
 export function JejuHomeScreen() {
@@ -126,7 +127,7 @@ const activityModes = [
 ] as const;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 36, gap: 18 }, actions: { flexDirection: 'row', gap: 8 }, headerButton: { width: 40, height: 40, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', shadowColor: '#3B2416', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
+  screen: { flex: 1 }, content: { paddingHorizontal: layout.screenPadding, paddingBottom: layout.screenBottomPadding, gap: 18 }, actions: { flexDirection: 'row', gap: 8 }, headerButton: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', shadowColor: '#3B2416', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   hero: { minHeight: 232, borderRadius: 30, padding: 24, overflow: 'hidden', justifyContent: 'center', borderCurve: 'continuous', shadowColor: '#8C321D', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 }, heroEyebrow: { color: '#612B16', fontSize: 12, fontWeight: '900', letterSpacing: 0.2 }, heroTitle: { color: '#35170C', fontFamily: 'NanumOld', fontSize: 26, lineHeight: 36, paddingTop: 9 }, heroButton: { alignSelf: 'flex-start', marginTop: 20, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.78)', paddingHorizontal: 15, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 7 }, heroButtonText: { color: '#522612', fontSize: 13, fontWeight: '900' }, prepButton: { alignSelf: 'flex-start', marginTop: 9, paddingHorizontal: 3, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }, prepButtonText: { color: '#FFF8F1', fontSize: 12, fontWeight: '800' }, heroOrb: { position: 'absolute', width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(255,255,255,0.13)', right: -38, top: -34 },
   horizontal: { gap: 12, paddingRight: 18 },
   activityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, activityCard: { width: '48%', borderWidth: 1, borderRadius: 19, padding: 14, minHeight: 116, borderCurve: 'continuous' }, activityIcon: { width: 41, height: 41, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, activityLabel: { fontSize: 15, fontWeight: '900', paddingTop: 10 }, activityCaption: { fontSize: 11, paddingTop: 3 },

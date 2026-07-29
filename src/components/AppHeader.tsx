@@ -48,7 +48,7 @@ export function AppHeader({
 const styles = StyleSheet.create({
   safe: { zIndex: 10 },
   bar: { height: layout.appBarHeight, flexDirection: 'row', alignItems: 'center', paddingHorizontal: layout.screenPadding },
-  back: { width: 38, height: 44, justifyContent: 'center', marginLeft: -8 },
+  back: { width: layout.minTouchTarget, height: layout.minTouchTarget, justifyContent: 'center', marginLeft: -8 },
   titleWrap: { flex: 1, justifyContent: 'center' },
   title: { ...typography.heading, fontSize: 22, fontFamily: 'NanumBold', letterSpacing: -0.4 },
   subtitle: { ...typography.caption, marginTop: 1 },

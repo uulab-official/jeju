@@ -8,6 +8,7 @@ import { HapticPressable } from '@/src/components/HapticPressable';
 import { useJejuData } from '@/src/providers/JejuDataProvider';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { usePlaceData } from '@/src/providers/PlaceDataProvider';
+import { layout, typography } from '@/src/theme/tokens';
 
 const groups = [
   {
@@ -80,7 +81,7 @@ export default function MoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 }, content: { padding: 18, paddingBottom: 34 }, summary: { borderRadius: 20, padding: 18, flexDirection: 'row', gap: 14, alignItems: 'center', marginBottom: 16 }, summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }, summaryCopy: { flex: 1 }, summaryTitle: { fontFamily: 'NanumOld', fontSize: 22, marginBottom: 4 }, summaryText: { fontSize: 13, lineHeight: 19 },
-  section: { marginBottom: 16 }, sectionTitle: { fontSize: 12, fontWeight: '800', marginBottom: 8, marginLeft: 4 }, group: { borderWidth: 1, borderRadius: 20, overflow: 'hidden' }, row: { minHeight: 72, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 13 }, rowCopy: { flex: 1, gap: 3 }, rowLabel: { fontSize: 15, fontWeight: '700' }, rowCaption: { fontSize: 12 },
-  refresh: { marginTop: 14, minHeight: 52, borderWidth: 1, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }, refreshText: { fontSize: 14, fontWeight: '700' }, source: { textAlign: 'center', fontSize: 11, marginTop: 18 },
+  screen: { flex: 1 }, content: { padding: layout.screenPadding, paddingBottom: layout.screenBottomPadding }, summary: { borderRadius: 20, padding: layout.screenPadding, flexDirection: 'row', gap: 14, alignItems: 'center', marginBottom: 16 }, summaryIcon: { width: 52, height: 52, borderRadius: 17, alignItems: 'center', justifyContent: 'center' }, summaryCopy: { flex: 1 }, summaryTitle: { ...typography.display, fontSize: 22, lineHeight: 30, marginBottom: 4 }, summaryText: { ...typography.body, fontSize: 13, lineHeight: 19 },
+  section: { marginBottom: 16 }, sectionTitle: { ...typography.label, marginBottom: 8, marginLeft: 4 }, group: { borderWidth: 1, borderRadius: 20, overflow: 'hidden' }, row: { minHeight: 72, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 13 }, rowCopy: { flex: 1, gap: 3 }, rowLabel: { ...typography.subheading, fontSize: 15 }, rowCaption: { ...typography.caption },
+  refresh: { marginTop: 14, minHeight: 52, borderWidth: 1, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }, refreshText: { ...typography.body, fontWeight: '700' }, source: { ...typography.caption, textAlign: 'center', fontSize: 11, marginTop: 18 },
 });
