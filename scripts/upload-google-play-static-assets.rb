@@ -55,8 +55,11 @@ begin
     end
   end
 
-  service.commit_edit(package_name, edit.id)
-rescue StandardError
+  # Rejected or draft apps can require store-listing changes to remain pending
+  # until they are explicitly sent for review from Play Console.
+  service.commit_edit(package_name, edit.id, changes_not_sent_for_review: true)
+rescue StandardError => error
+  warn error.body if error.respond_to?(:body) && !error.body.to_s.empty?
   service.delete_edit(package_name, edit.id) rescue nil
   raise
 end
