@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout, typography } from '@/src/theme/tokens';
 
 export function AppHeader({
   title,
@@ -46,10 +47,10 @@ export function AppHeader({
 
 const styles = StyleSheet.create({
   safe: { zIndex: 10 },
-  bar: { height: 56, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18 },
+  bar: { height: layout.appBarHeight, flexDirection: 'row', alignItems: 'center', paddingHorizontal: layout.screenPadding },
   back: { width: 38, height: 44, justifyContent: 'center', marginLeft: -8 },
   titleWrap: { flex: 1, justifyContent: 'center' },
-  title: { fontSize: 22, fontFamily: 'NanumBold', letterSpacing: -0.4 },
-  subtitle: { fontSize: 12, marginTop: 1 },
+  title: { ...typography.heading, fontSize: 22, fontFamily: 'NanumBold', letterSpacing: -0.4 },
+  subtitle: { ...typography.caption, marginTop: 1 },
   actions: { minWidth: 38, flexDirection: 'row', justifyContent: 'flex-end', gap: 4 },
 });

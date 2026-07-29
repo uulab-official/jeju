@@ -58,3 +58,19 @@ export const darkColors: AppColors = {
 
 export const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
 export const radius = { sm: 10, md: 16, lg: 24, pill: 999 } as const;
+export const layout = {
+  screenPadding: 18,
+  screenBottomPadding: 36,
+  appBarHeight: 56,
+  controlHeight: 50,
+  minTouchTarget: 44,
+} as const;
+
+export const typography = {
+  display: { fontFamily: 'NanumOld', fontSize: 29, lineHeight: 39 },
+  heading: { fontSize: 20, fontWeight: '900' as const, letterSpacing: -0.2 },
+  subheading: { fontSize: 16, fontWeight: '900' as const },
+  body: { fontSize: 14, lineHeight: 21 },
+  caption: { fontSize: 12, lineHeight: 18 },
+  label: { fontSize: 12, fontWeight: '800' as const },
+} as const;

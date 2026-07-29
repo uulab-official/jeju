@@ -6,6 +6,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
+import { SectionHeading } from '@/src/components/SectionHeading';
 import { resolveGuidePlaces, travelGuides } from '@/src/data/travel-guides';
 import { PlaceCard } from '@/src/features/discover/components/place-card';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
@@ -52,9 +53,7 @@ export function JejuHomeScreen() {
           <View style={styles.heroOrb} />
         </LinearGradient>
 
-        <View style={styles.heading}>
-          <View><Text selectable style={[styles.sectionTitle, { color: colors.text }]}>제주에서 뭐할까?</Text><Text selectable style={[styles.sectionCaption, { color: colors.muted }]}>지금 끌리는 여행 방식으로 골라보세요</Text></View>
-        </View>
+        <SectionHeading title="제주에서 뭐할까?" caption="지금 끌리는 여행 방식으로 골라보세요" />
         <View style={styles.activityGrid}>
           {activityModes.map((mode) => (
             <HapticPressable
@@ -70,9 +69,7 @@ export function JejuHomeScreen() {
           ))}
         </View>
 
-        <View style={styles.heading}>
-          <View><Text selectable style={[styles.sectionTitle, { color: colors.text }]}>테마 여행 가이드</Text><Text selectable style={[styles.sectionCaption, { color: colors.muted }]}>공식 관광정보를 동선처럼 이어봤어요</Text></View>
-        </View>
+        <SectionHeading title="테마 여행 가이드" caption="공식 관광정보를 동선처럼 이어봤어요" />
         <ScrollView horizontal contentContainerStyle={styles.guideRow} showsHorizontalScrollIndicator={false}>
           {guides.map(({ guide, placeCount }) => (
             <HapticPressable key={guide.id} feedback="medium" onPress={() => router.push({ pathname: '/guides/[id]', params: { id: guide.id } })}>
@@ -85,10 +82,7 @@ export function JejuHomeScreen() {
           ))}
         </ScrollView>
 
-        <View style={styles.heading}>
-          <View><Text selectable style={[styles.sectionTitle, { color: colors.text }]}>처음 만나는 제주</Text><Text selectable style={[styles.sectionCaption, { color: colors.muted }]}>공식 관광정보를 바탕으로 골랐어요</Text></View>
-          <HapticPressable onPress={() => router.push('/search')}><Text style={[styles.more, { color: colors.primaryStrong }]}>전체 보기</Text></HapticPressable>
-        </View>
+        <SectionHeading title="처음 만나는 제주" caption="공식 관광정보를 바탕으로 골랐어요" action={{ label: '전체 보기', onPress: () => router.push('/search') }} />
         <ScrollView horizontal contentContainerStyle={styles.horizontal} showsHorizontalScrollIndicator={false}>
           {places.slice(0, 6).map((place) => <PlaceCard compact key={place.id} place={place} />)}
         </ScrollView>
@@ -101,9 +95,7 @@ export function JejuHomeScreen() {
           </LinearGradient>
         </HapticPressable>
 
-        <View style={styles.heading}>
-          <View><Text selectable style={[styles.sectionTitle, { color: colors.text }]}>제주의 말과 삶</Text><Text selectable style={[styles.sectionCaption, { color: colors.muted }]}>역사와 여행지 너머의 제주를 알아가요</Text></View>
-        </View>
+        <SectionHeading title="제주의 말과 삶" caption="역사와 여행지 너머의 제주를 알아가요" />
         <View style={styles.cultureGrid}>
           {resourceKinds.map((kind) => {
             const meta = resourceMeta[kind];
@@ -136,7 +128,7 @@ const activityModes = [
 const styles = StyleSheet.create({
   screen: { flex: 1 }, content: { paddingHorizontal: 18, paddingBottom: 36, gap: 18 }, actions: { flexDirection: 'row', gap: 8 }, headerButton: { width: 40, height: 40, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', shadowColor: '#3B2416', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   hero: { minHeight: 232, borderRadius: 30, padding: 24, overflow: 'hidden', justifyContent: 'center', borderCurve: 'continuous', shadowColor: '#8C321D', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 }, heroEyebrow: { color: '#612B16', fontSize: 12, fontWeight: '900', letterSpacing: 0.2 }, heroTitle: { color: '#35170C', fontFamily: 'NanumOld', fontSize: 26, lineHeight: 36, paddingTop: 9 }, heroButton: { alignSelf: 'flex-start', marginTop: 20, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.78)', paddingHorizontal: 15, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 7 }, heroButtonText: { color: '#522612', fontSize: 13, fontWeight: '900' }, prepButton: { alignSelf: 'flex-start', marginTop: 9, paddingHorizontal: 3, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }, prepButtonText: { color: '#FFF8F1', fontSize: 12, fontWeight: '800' }, heroOrb: { position: 'absolute', width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(255,255,255,0.13)', right: -38, top: -34 },
-  heading: { paddingTop: 8, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }, sectionTitle: { fontSize: 20, fontWeight: '900' }, sectionCaption: { fontSize: 12, paddingTop: 4 }, more: { fontSize: 12, fontWeight: '900' }, horizontal: { gap: 12, paddingRight: 18 },
+  horizontal: { gap: 12, paddingRight: 18 },
   activityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, activityCard: { width: '48%', borderWidth: 1, borderRadius: 19, padding: 14, minHeight: 116, borderCurve: 'continuous' }, activityIcon: { width: 41, height: 41, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, activityLabel: { fontSize: 15, fontWeight: '900', paddingTop: 10 }, activityCaption: { fontSize: 11, paddingTop: 3 },
   guideRow: { gap: 12, paddingRight: 18 }, guideCard: { width: 272, minHeight: 202, borderRadius: 24, padding: 19, justifyContent: 'space-between', borderCurve: 'continuous' }, guideTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, guideEyebrow: { color: 'rgba(255,255,255,0.82)', fontSize: 11, fontWeight: '900' }, guideTitle: { color: '#FFFFFF', fontFamily: 'NanumOld', fontSize: 22, lineHeight: 30 }, guideSummary: { color: 'rgba(255,255,255,0.88)', fontSize: 12, lineHeight: 18, paddingTop: 5 }, guideMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, guideMetaText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
   cultureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, cultureCard: { width: '48%', borderWidth: 1, borderRadius: 20, padding: 15, minHeight: 120, borderCurve: 'continuous', shadowColor: '#3B2416', shadowOpacity: 0.045, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 }, cultureIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, cultureTitle: { fontSize: 15, fontWeight: '800', paddingTop: 10 }, cultureCount: { fontSize: 11, paddingTop: 3 },

@@ -6,6 +6,7 @@ import { HapticPressable } from '@/src/components/HapticPressable';
 import { useFavorites } from '@/src/providers/FavoritesProvider';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { JejuItem, resourceMeta } from '@/src/types/jeju';
+import { radius, typography } from '@/src/theme/tokens';
 
 export function ItemRow({ item, showKind = false }: { item: JejuItem; showKind?: boolean }) {
   const { colors } = useAppTheme();
@@ -47,11 +48,11 @@ export function ItemRow({ item, showKind = false }: { item: JejuItem; showKind?:
 }
 
 const styles = StyleSheet.create({
-  row: { minHeight: 92, borderRadius: 17, borderWidth: 1, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  icon: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  row: { minHeight: 92, borderRadius: radius.md, borderWidth: 1, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  icon: { width: 42, height: 42, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
   copy: { flex: 1, gap: 3 },
   kind: { fontSize: 11, fontWeight: '700' },
-  title: { fontSize: 16, lineHeight: 22, fontFamily: 'NanumOld' },
-  subtitle: { fontSize: 13, lineHeight: 19 },
+  title: { ...typography.subheading, lineHeight: 22, fontFamily: 'NanumOld' },
+  subtitle: typography.body,
   save: { padding: 6 },
 });

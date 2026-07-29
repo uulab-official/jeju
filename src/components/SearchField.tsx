@@ -3,6 +3,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout, radius } from '@/src/theme/tokens';
 
 export function SearchField({ value, onChangeText, autoFocus = false }: { value: string; onChangeText: (value: string) => void; autoFocus?: boolean }) {
   const { colors } = useAppTheme();
@@ -38,7 +39,7 @@ export function SearchField({ value, onChangeText, autoFocus = false }: { value:
 }
 
 const styles = StyleSheet.create({
-  container: { height: 50, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 10 },
+  container: { height: layout.controlHeight, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, gap: 10 },
   clearButton: { width: 32, height: 40, alignItems: 'center', justifyContent: 'center' },
   input: { flex: 1, fontSize: 16, paddingVertical: 0 },
 });
