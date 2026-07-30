@@ -6,10 +6,10 @@ import { HapticPressable } from '@/src/components/HapticPressable';
 import { ThemeMode, useAppTheme } from '@/src/providers/AppThemeProvider';
 import { layout, typography } from '@/src/theme/tokens';
 
-const options: { mode: ThemeMode; label: string; description: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { mode: 'system', label: '시스템 설정', description: '기기의 화면 모드를 따라가요.', icon: 'phone-portrait-outline' },
-  { mode: 'light', label: '라이트 모드', description: '항상 밝은 화면을 사용해요.', icon: 'sunny-outline' },
-  { mode: 'dark', label: '다크 모드', description: '항상 어두운 화면을 사용해요.', icon: 'moon-outline' },
+const options: { mode: ThemeMode; label: string; description: string }[] = [
+  { mode: 'system', label: '시스템 설정', description: '기기의 화면 모드를 따라가요.' },
+  { mode: 'light', label: '라이트 모드', description: '항상 밝은 화면을 사용해요.' },
+  { mode: 'dark', label: '다크 모드', description: '항상 어두운 화면을 사용해요.' },
 ];
 
 export default function ThemeScreen() {
@@ -18,19 +18,41 @@ export default function ThemeScreen() {
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <AppHeader back title="화면 테마" />
       <View style={styles.content}>
-        {options.map((option) => {
-          const selected = mode === option.mode;
-          return (
-            <HapticPressable key={option.mode} feedback="selection" onPress={() => setMode(option.mode)} style={[styles.row, { backgroundColor: colors.surface, borderColor: selected ? colors.primary : colors.border }]}>
-              <View style={[styles.icon, { backgroundColor: colors.surfaceAlt }]}><Ionicons name={option.icon} size={22} color={colors.primaryStrong} /></View>
-              <View style={{ flex: 1 }}><Text style={[styles.label, { color: colors.text }]}>{option.label}</Text><Text style={[styles.description, { color: colors.muted }]}>{option.description}</Text></View>
-              <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={23} color={selected ? colors.primary : colors.muted} />
-            </HapticPressable>
-          );
-        })}
+        <Text style={[styles.sectionLabel, { color: colors.muted }]}>테마 선택</Text>
+        <View style={[styles.list, { borderColor: colors.border }]}>
+          {options.map((option, index) => {
+            const selected = mode === option.mode;
+            return (
+              <HapticPressable
+                accessibilityLabel={`${option.label}: ${option.description}`}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                key={option.mode}
+                feedback="selection"
+                onPress={() => setMode(option.mode)}
+                style={[styles.row, index < options.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
+              >
+                <View style={styles.copy}>
+                  <Text style={[styles.label, { color: selected ? colors.primaryStrong : colors.text }]}>{option.label}</Text>
+                  <Text style={[styles.description, { color: colors.muted }]}>{option.description}</Text>
+                </View>
+                <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={23} color={selected ? colors.primary : colors.muted} />
+              </HapticPressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: layout.screenPadding, gap: 12 }, row: { minHeight: 82, borderWidth: 1.5, borderRadius: 18, padding: 15, flexDirection: 'row', alignItems: 'center', gap: 13 }, icon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' }, label: { ...typography.subheading, marginBottom: 4 }, description: { ...typography.caption } });
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  content: { paddingHorizontal: layout.screenPadding, paddingTop: 10 },
+  sectionLabel: { ...typography.label, marginBottom: 10, paddingHorizontal: 2 },
+  list: { borderTopWidth: 1, borderBottomWidth: 1 },
+  row: { minHeight: 72, paddingHorizontal: 2, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  copy: { flex: 1, gap: 3 },
+  label: { ...typography.subheading, fontSize: 15 },
+  description: { ...typography.caption },
+});
