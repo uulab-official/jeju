@@ -53,7 +53,13 @@ export default function TripPrepScreen() {
           </View>
           <Text style={[styles.summaryTitle, { color: colors.text }]}>준비한 만큼 제주를 더 편안하게 만나요</Text>
           <Text style={[styles.summaryBody, { color: colors.muted }]}>날씨와 장소 운영 정보는 출발 직전에 한 번 더 확인해 주세요.</Text>
-          <View accessibilityLabel={`${checklist.length}개 중 ${completed}개 완료`} accessibilityRole="progressbar" style={styles.progress}>
+          <View
+            accessible
+            accessibilityLabel="여행 준비 진행률"
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: checklist.length, now: completed, text: `${checklist.length}개 중 ${completed}개 완료` }}
+            style={styles.progress}
+          >
             {checklist.map((item) => (
               <View key={item.id} style={[styles.progressSegment, { backgroundColor: checked[item.id] ? colors.primary : colors.border }]} />
             ))}
