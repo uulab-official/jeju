@@ -6,6 +6,7 @@ import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { jejuHistoryChapters } from '@/src/data/jeju-history';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { pretendard } from '@/src/theme/tokens';
 
 export function JejuHistoryScreen() {
   const { colors } = useAppTheme();
@@ -56,22 +57,22 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { paddingHorizontal: 18, paddingBottom: 42, gap: 26 },
   hero: { paddingTop: 18, paddingBottom: 24, borderBottomWidth: StyleSheet.hairlineWidth, gap: 9 },
-  heroEyebrow: { fontSize: 12, fontWeight: '900' },
+  heroEyebrow: { ...pretendard(900), fontSize: 12 },
   heroTitle: { fontFamily: 'NanumOld', fontSize: 33, lineHeight: 43 },
-  heroText: { fontSize: 14, lineHeight: 22, maxWidth: 320 },
+  heroText: { ...pretendard(400), fontSize: 14, lineHeight: 22, maxWidth: 320 },
   heading: { gap: 4 },
-  sectionTitle: { fontSize: 21, fontWeight: '900' },
-  sectionCaption: { fontSize: 12, lineHeight: 18 },
+  sectionTitle: { ...pretendard(900), fontSize: 21 },
+  sectionCaption: { ...pretendard(400), fontSize: 12, lineHeight: 18 },
   timeline: { position: 'relative' },
   line: { position: 'absolute', width: 1, left: 6, top: 18, bottom: 18 },
   timelineRow: { paddingLeft: 25, position: 'relative' },
   dot: { position: 'absolute', left: 1, top: 30, width: 11, height: 11, borderRadius: 6, borderWidth: 3, zIndex: 1 },
   card: { minHeight: 136, paddingVertical: 18, borderBottomWidth: StyleSheet.hairlineWidth },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  period: { flex: 1, fontSize: 11, fontWeight: '900' },
+  period: { ...pretendard(900), flex: 1, fontSize: 11 },
   cardTitle: { fontFamily: 'NanumOld', fontSize: 22, lineHeight: 30, paddingTop: 12 },
-  cardSummary: { fontSize: 13, lineHeight: 20, paddingTop: 6 },
+  cardSummary: { ...pretendard(400), fontSize: 13, lineHeight: 20, paddingTop: 6 },
   sourceNote: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16, gap: 6 },
-  sourceNoteTitle: { fontSize: 14, fontWeight: '900' },
-  sourceNoteText: { fontSize: 11, lineHeight: 17 },
+  sourceNoteTitle: { ...pretendard(800), fontSize: 14 },
+  sourceNoteText: { ...pretendard(400), fontSize: 11, lineHeight: 17 },
 });

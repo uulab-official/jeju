@@ -32,6 +32,15 @@ const MINIMUM_SPLASH_MS = 650;
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
+    'Pretendard-100': require('../assets/fonts/pretendard/Pretendard-Thin.otf'),
+    'Pretendard-200': require('../assets/fonts/pretendard/Pretendard-ExtraLight.otf'),
+    'Pretendard-300': require('../assets/fonts/pretendard/Pretendard-Light.otf'),
+    'Pretendard-400': require('../assets/fonts/pretendard/Pretendard-Regular.otf'),
+    'Pretendard-500': require('../assets/fonts/pretendard/Pretendard-Medium.otf'),
+    'Pretendard-600': require('../assets/fonts/pretendard/Pretendard-SemiBold.otf'),
+    'Pretendard-700': require('../assets/fonts/pretendard/Pretendard-Bold.otf'),
+    'Pretendard-800': require('../assets/fonts/pretendard/Pretendard-ExtraBold.otf'),
+    'Pretendard-900': require('../assets/fonts/pretendard/Pretendard-Black.otf'),
     NanumOld: require('../assets/fonts/NanumMyeongjo-YetHangul.ttf'),
     NanumBold: require('../assets/fonts/NanumBarunGothicBold.ttf'),
   });

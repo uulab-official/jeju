@@ -12,7 +12,7 @@ import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { usePlaceData } from '@/src/providers/PlaceDataProvider';
 import { useSavedPlaces } from '@/src/providers/SavedPlacesProvider';
 import { openInAppleMaps, openInNaverMap } from '@/src/services/naver-map';
-import { layout } from '@/src/theme/tokens';
+import { layout, pretendard } from '@/src/theme/tokens';
 
 export function PlaceDetailScreen({ id }: { id: string }) {
   const { colors } = useAppTheme();
@@ -93,31 +93,31 @@ const styles = StyleSheet.create({
   headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: layout.screenPadding, paddingBottom: 38, gap: 20 },
   hero: { height: 212, borderRadius: 14, padding: 16, justifyContent: 'flex-end', overflow: 'hidden', borderCurve: 'continuous' },
-  heroRegion: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  heroRegion: { ...pretendard(800), color: '#FFFFFF', fontSize: 13 },
   gallery: { gap: 8, paddingRight: 10 },
   galleryImage: { width: 126, height: 84, borderRadius: 10 },
   heading: { gap: 6 },
-  title: { fontSize: 28, lineHeight: 36, fontWeight: '900' },
-  category: { fontSize: 12, fontWeight: '900' },
-  tagLine: { fontSize: 12, lineHeight: 18 },
-  lead: { fontSize: 17, lineHeight: 27, fontWeight: '600' },
+  title: { ...pretendard(900), fontSize: 28, lineHeight: 36 },
+  category: { ...pretendard(900), fontSize: 12 },
+  tagLine: { ...pretendard(400), fontSize: 12, lineHeight: 18 },
+  lead: { ...pretendard(600), fontSize: 17, lineHeight: 27 },
   story: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 18, gap: 9 },
-  storyTitle: { fontSize: 17, fontWeight: '900' },
-  summary: { fontSize: 15, lineHeight: 25 },
+  storyTitle: { ...pretendard(900), fontSize: 17 },
+  summary: { ...pretendard(400), fontSize: 15, lineHeight: 25 },
   details: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 17, gap: 13 },
-  detailsTitle: { fontSize: 16, fontWeight: '900', paddingBottom: 2 },
+  detailsTitle: { ...pretendard(900), fontSize: 16, paddingBottom: 2 },
   detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  detailLabel: { width: 56, fontSize: 12, lineHeight: 19 },
-  detailValue: { flex: 1, fontSize: 13, lineHeight: 19 },
+  detailLabel: { ...pretendard(400), width: 56, fontSize: 12, lineHeight: 19 },
+  detailValue: { ...pretendard(400), flex: 1, fontSize: 13, lineHeight: 19 },
   actions: { flexDirection: 'row', gap: 8 },
   mapButton: { flex: 1, minHeight: 52, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 8 },
-  primaryText: { fontSize: 13, fontWeight: '900' },
+  primaryText: { ...pretendard(900), fontSize: 13 },
   secondaryButton: { width: 52, height: 52, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   source: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sourceCopy: { flex: 1, gap: 3 },
-  sourceLabel: { fontSize: 11 },
-  sourceName: { fontSize: 14, fontWeight: '800' },
-  sourceLicense: { fontSize: 10, lineHeight: 15 },
-  sourceLink: { fontSize: 12, fontWeight: '900' },
+  sourceLabel: { ...pretendard(400), fontSize: 11 },
+  sourceName: { ...pretendard(800), fontSize: 14 },
+  sourceLicense: { ...pretendard(400), fontSize: 10, lineHeight: 15 },
+  sourceLink: { ...pretendard(900), fontSize: 12 },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
 });

@@ -66,11 +66,29 @@ export const layout = {
   minTouchTarget: 44,
 } as const;
 
+export type PretendardWeight = 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+
+export const pretendardFamily: Record<PretendardWeight, string> = {
+  100: 'Pretendard-100',
+  200: 'Pretendard-200',
+  300: 'Pretendard-300',
+  400: 'Pretendard-400',
+  500: 'Pretendard-500',
+  600: 'Pretendard-600',
+  700: 'Pretendard-700',
+  800: 'Pretendard-800',
+  900: 'Pretendard-900',
+};
+
+export const pretendard = (weight: PretendardWeight = 400) => ({
+  fontFamily: pretendardFamily[weight],
+});
+
 export const typography = {
   display: { fontFamily: 'NanumOld', fontSize: 29, lineHeight: 39 },
-  heading: { fontSize: 20, fontWeight: '900' as const, letterSpacing: -0.2 },
-  subheading: { fontSize: 16, fontWeight: '900' as const },
-  body: { fontSize: 14, lineHeight: 21 },
-  caption: { fontSize: 12, lineHeight: 18 },
-  label: { fontSize: 12, fontWeight: '800' as const },
+  heading: { ...pretendard(900), fontSize: 20, letterSpacing: -0.2 },
+  subheading: { ...pretendard(800), fontSize: 16 },
+  body: { ...pretendard(400), fontSize: 14, lineHeight: 21 },
+  caption: { ...pretendard(400), fontSize: 12, lineHeight: 18 },
+  label: { ...pretendard(800), fontSize: 12 },
 } as const;
