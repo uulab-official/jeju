@@ -24,8 +24,8 @@ SplashScreen.setOptions({ duration: 180, fade: true });
 
 const OTA_RELOAD_PROGRESS_KEY = '@jeju/startup/ota-progress/v1';
 const FONT_LOAD_TIMEOUT_MS = 5_000;
-const OTA_CHECK_TIMEOUT_MS = 6_000;
-const OTA_FETCH_TIMEOUT_MS = 20_000;
+const OTA_CHECK_TIMEOUT_MS = 15_000;
+const OTA_FETCH_TIMEOUT_MS = 60_000;
 const OTA_RELOAD_TIMEOUT_MS = 6_000;
 const APPWRITE_PING_TIMEOUT_MS = 4_000;
 const MINIMUM_SPLASH_MS = 650;
