@@ -1,0 +1,32 @@
+{
+  "date": "2026-07-30",
+  "url": "ios-installed://kr.co.uulab.jeju/production",
+  "designScore": "A-",
+  "aiSlopScore": "A-",
+  "categoryGrades": {
+    "hierarchy": "A-",
+    "typography": "A",
+    "spacing": "A-",
+    "color": "A-",
+    "interactionStates": "A",
+    "responsive": "A",
+    "contentQuality": "A",
+    "aiSlop": "A-",
+    "motion": "B+",
+    "performanceFeel": "A-"
+  },
+  "findings": [
+    {
+      "id": "FINDING-016",
+      "title": "데이터 상태 화면 카드 밀도",
+      "impact": "medium",
+      "category": "hierarchy"
+    },
+    {
+      "id": "FINDING-017",
+      "title": "고객지원·앱 정보의 중앙 장식 카드",
+      "impact": "medium",
+      "category": "aiSlop"
+    }
+  ]
+}
