@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Constants from 'expo-constants';
 import { router, useScrollToTop } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppHeader } from '@/src/components/AppHeader';
@@ -20,6 +20,18 @@ export function JejuMapScreen() {
   const { places } = usePlaceData();
   const configured = Boolean(Constants.expoConfig?.extra?.naverMapConfigured);
   const [mapModule, setMapModule] = useState<NaverMapModule | null>(null);
+  const placesById = useMemo(
+    () => new Map(places.map((place) => [place.id, place])),
+    [places],
+  );
+  const clusterMarkers = useMemo(
+    () => places.map((place) => ({
+      identifier: place.id,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    })),
+    [places],
+  );
 
   useEffect(() => {
     if (!configured) return;
@@ -28,13 +40,29 @@ export function JejuMapScreen() {
 
   if (configured && mapModule) {
     const MapView = mapModule.NaverMapView;
-    const Marker = mapModule.NaverMapMarkerOverlay;
     return (
       <View style={[styles.screen, { backgroundColor: colors.background }]}>
         <AppHeader title="제주 지도" subtitle="장소를 눌러 자세히 알아보세요" />
-        <MapView style={styles.nativeMap} initialCamera={{ latitude: 33.38, longitude: 126.55, zoom: 9 }} isShowZoomControls isShowScaleBar>
-          {places.map((place) => <Marker key={place.id} latitude={place.latitude} longitude={place.longitude} caption={{ text: place.name }} onTap={() => { void triggerHaptic('selection'); router.push({ pathname: '/places/[id]', params: { id: place.id } }); }} />)}
-        </MapView>
+        <MapView
+          clusters={[{
+            animate: true,
+            markers: clusterMarkers,
+            maxZoom: 16,
+            minZoom: 4,
+            screenDistance: 54,
+          }]}
+          initialCamera={{ latitude: 33.38, longitude: 126.55, zoom: 9 }}
+          isShowScaleBar
+          isShowZoomControls
+          locale="ko"
+          onTapClusterLeaf={({ markerIdentifier }) => {
+            const place = placesById.get(markerIdentifier);
+            if (!place) return;
+            void triggerHaptic('selection');
+            router.push({ pathname: '/places/[id]', params: { id: place.id } });
+          }}
+          style={styles.nativeMap}
+        />
       </View>
     );
   }

@@ -55,7 +55,7 @@ export function JejuHomeScreen() {
         </LinearGradient>
 
         <SectionHeading title="제주에서 뭐할까?" caption="지금 끌리는 여행 방식으로 골라보세요" />
-        <View style={styles.activityGrid}>
+        <ScrollView horizontal contentContainerStyle={styles.activityRow} showsHorizontalScrollIndicator={false}>
           {activityModes.map((mode) => (
             <HapticPressable
               key={mode.label}
@@ -68,7 +68,7 @@ export function JejuHomeScreen() {
               <Text style={[styles.activityCaption, { color: colors.muted }]}>{mode.caption}</Text>
             </HapticPressable>
           ))}
-        </View>
+        </ScrollView>
 
         <SectionHeading title="테마 여행 가이드" caption="공식 관광정보를 동선처럼 이어봤어요" />
         <ScrollView horizontal contentContainerStyle={styles.guideRow} showsHorizontalScrollIndicator={false}>
@@ -97,7 +97,7 @@ export function JejuHomeScreen() {
         </HapticPressable>
 
         <SectionHeading title="제주의 말과 삶" caption="역사와 여행지 너머의 제주를 알아가요" />
-        <View style={styles.cultureGrid}>
+        <ScrollView horizontal contentContainerStyle={styles.cultureRow} showsHorizontalScrollIndicator={false}>
           {resourceKinds.map((kind) => {
             const meta = resourceMeta[kind];
             return (
@@ -108,7 +108,7 @@ export function JejuHomeScreen() {
               </HapticPressable>
             );
           })}
-        </View>
+        </ScrollView>
         <HapticPressable onPress={() => router.push('/language/notation')} style={[styles.languageBanner, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
           <Ionicons name="language-outline" size={24} color={colors.primaryStrong} />
           <View style={styles.bannerCopy}><Text selectable style={[styles.bannerTitle, { color: colors.text }]}>제주어 표기법</Text><Text selectable style={[styles.bannerText, { color: colors.muted }]}>제주의 말을 바르게 읽고 적는 방법</Text></View>
@@ -130,9 +130,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1 }, content: { paddingHorizontal: layout.screenPadding, paddingBottom: layout.screenBottomPadding, gap: 18 }, actions: { flexDirection: 'row', gap: 8 }, headerButton: { width: layout.minTouchTarget, height: layout.minTouchTarget, borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', shadowColor: '#3B2416', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
   hero: { minHeight: 232, borderRadius: 30, padding: 24, overflow: 'hidden', justifyContent: 'center', borderCurve: 'continuous', shadowColor: '#8C321D', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 }, heroEyebrow: { color: '#612B16', fontSize: 12, fontWeight: '900', letterSpacing: 0.2 }, heroTitle: { color: '#35170C', fontFamily: 'NanumOld', fontSize: 26, lineHeight: 36, paddingTop: 9 }, heroButton: { alignSelf: 'flex-start', marginTop: 20, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.78)', paddingHorizontal: 15, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 7 }, heroButtonText: { color: '#522612', fontSize: 13, fontWeight: '900' }, prepButton: { alignSelf: 'flex-start', marginTop: 9, paddingHorizontal: 3, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }, prepButtonText: { color: '#FFF8F1', fontSize: 12, fontWeight: '800' }, heroOrb: { position: 'absolute', width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(255,255,255,0.13)', right: -38, top: -34 },
   horizontal: { gap: 12, paddingRight: 18 },
-  activityGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, activityCard: { width: '48%', borderWidth: 1, borderRadius: 19, padding: 14, minHeight: 116, borderCurve: 'continuous' }, activityIcon: { width: 41, height: 41, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, activityLabel: { fontSize: 15, fontWeight: '900', paddingTop: 10 }, activityCaption: { fontSize: 11, paddingTop: 3 },
+  activityRow: { gap: 10, paddingRight: layout.screenPadding }, activityCard: { width: 152, borderWidth: 1, borderRadius: 19, padding: 14, minHeight: 116, borderCurve: 'continuous' }, activityIcon: { width: 41, height: 41, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }, activityLabel: { fontSize: 15, fontWeight: '900', paddingTop: 10 }, activityCaption: { fontSize: 11, paddingTop: 3 },
   guideRow: { gap: 12, paddingRight: 18 }, guideCard: { width: 272, minHeight: 202, borderRadius: 24, padding: 19, justifyContent: 'space-between', borderCurve: 'continuous' }, guideTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, guideEyebrow: { color: 'rgba(255,255,255,0.82)', fontSize: 11, fontWeight: '900' }, guideTitle: { color: '#FFFFFF', fontFamily: 'NanumOld', fontSize: 22, lineHeight: 30 }, guideSummary: { color: 'rgba(255,255,255,0.88)', fontSize: 12, lineHeight: 18, paddingTop: 5 }, guideMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, guideMetaText: { color: '#FFFFFF', fontSize: 11, fontWeight: '900' },
-  cultureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, cultureCard: { width: '48%', borderWidth: 1, borderRadius: 20, padding: 15, minHeight: 120, borderCurve: 'continuous', shadowColor: '#3B2416', shadowOpacity: 0.045, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 }, cultureIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, cultureTitle: { fontSize: 15, fontWeight: '800', paddingTop: 10 }, cultureCount: { fontSize: 11, paddingTop: 3 },
+  cultureRow: { gap: 10, paddingRight: layout.screenPadding }, cultureCard: { width: 152, borderWidth: 1, borderRadius: 20, padding: 15, minHeight: 120, borderCurve: 'continuous', shadowColor: '#3B2416', shadowOpacity: 0.045, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 1 }, cultureIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, cultureTitle: { fontSize: 15, fontWeight: '800', paddingTop: 10 }, cultureCount: { fontSize: 11, paddingTop: 3 },
   historyBanner: { minHeight: 132, borderRadius: 24, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 13, borderCurve: 'continuous', overflow: 'hidden' }, historyIcon: { width: 50, height: 50, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' }, historyEyebrow: { color: 'rgba(255,244,232,0.72)', fontSize: 10, fontWeight: '900' }, historyTitle: { color: '#FFF8F1', fontFamily: 'NanumOld', fontSize: 21, paddingTop: 4 }, historyText: { color: 'rgba(255,248,241,0.82)', fontSize: 11, paddingTop: 4 },
   languageBanner: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 22, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 12, borderCurve: 'continuous' }, bannerCopy: { flex: 1, gap: 3 }, bannerTitle: { fontSize: 15, fontWeight: '800' }, bannerText: { fontSize: 12 },
 });

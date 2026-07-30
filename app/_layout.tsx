@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
 import { useEffect, useRef, useState } from 'react';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { StartupSplash } from '@/src/components/StartupSplash';
@@ -115,19 +116,21 @@ export default function RootLayout() {
   if (!ready) return <StartupSplash message={message} progress={progress} />;
 
   return (
-    <AppThemeProvider initialMode={initialTheme}>
-      <JejuDataProvider>
-        <PlaceDataProvider>
-          <FavoritesProvider>
-            <SavedPlacesProvider>
-              <PushNotificationsProvider>
-                <Navigation />
-              </PushNotificationsProvider>
-            </SavedPlacesProvider>
-          </FavoritesProvider>
-        </PlaceDataProvider>
-      </JejuDataProvider>
-    </AppThemeProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AppThemeProvider initialMode={initialTheme}>
+        <JejuDataProvider>
+          <PlaceDataProvider>
+            <FavoritesProvider>
+              <SavedPlacesProvider>
+                <PushNotificationsProvider>
+                  <Navigation />
+                </PushNotificationsProvider>
+              </SavedPlacesProvider>
+            </FavoritesProvider>
+          </PlaceDataProvider>
+        </JejuDataProvider>
+      </AppThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -2,7 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
@@ -20,10 +20,20 @@ export function AppHeader({
   right?: ReactNode;
 }) {
   const insets = useSafeAreaInsets();
+  const seedTop = initialWindowMetrics?.insets.top ?? 0;
+  const top = Math.max(insets.top, seedTop);
   const { colors } = useAppTheme();
 
   return (
-    <View style={[styles.safe, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+    <View
+      style={[
+        styles.safe,
+        {
+          height: top + layout.appBarHeight,
+          paddingTop: top,
+          backgroundColor: colors.background,
+        },
+      ]}>
       <View style={styles.bar}>
         {back ? (
           <HapticPressable
@@ -37,7 +47,13 @@ export function AppHeader({
         ) : null}
         <View style={styles.titleWrap}>
           <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>{title}</Text>
-          {subtitle ? <Text numberOfLines={1} style={[styles.subtitle, { color: colors.muted }]}>{subtitle}</Text> : null}
+          <Text
+            accessibilityElementsHidden={!subtitle}
+            importantForAccessibility={subtitle ? 'auto' : 'no-hide-descendants'}
+            numberOfLines={1}
+            style={[styles.subtitle, { color: subtitle ? colors.muted : 'transparent' }]}>
+            {subtitle || '\u00A0'}
+          </Text>
         </View>
         <View style={styles.actions}>{right}</View>
       </View>
@@ -46,11 +62,11 @@ export function AppHeader({
 }
 
 const styles = StyleSheet.create({
-  safe: { zIndex: 10 },
+  safe: { zIndex: 10, flexShrink: 0 },
   bar: { height: layout.appBarHeight, flexDirection: 'row', alignItems: 'center', paddingHorizontal: layout.screenPadding },
   back: { width: layout.minTouchTarget, height: layout.minTouchTarget, justifyContent: 'center', marginLeft: -8 },
-  titleWrap: { flex: 1, justifyContent: 'center' },
+  titleWrap: { flex: 1, minWidth: 0, height: layout.minTouchTarget, justifyContent: 'center' },
   title: { ...typography.heading, fontSize: 22, fontFamily: 'NanumBold', letterSpacing: -0.4 },
   subtitle: { ...typography.caption, marginTop: 1 },
-  actions: { minWidth: 38, flexDirection: 'row', justifyContent: 'flex-end', gap: 4 },
+  actions: { minWidth: layout.minTouchTarget, minHeight: layout.minTouchTarget, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
 });
