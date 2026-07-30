@@ -69,8 +69,6 @@ const styles = StyleSheet.create({
     ...typography.heading,
     fontSize: 20,
     lineHeight: 24,
-    fontFamily: 'NanumBold',
-    fontWeight: 'normal',
     letterSpacing: -0.3,
   },
   subtitle: { ...typography.caption, marginTop: 1 },
