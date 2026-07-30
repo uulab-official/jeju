@@ -3,12 +3,22 @@ import { useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
+import { useReducedMotionEnabled } from '@/src/hooks/useReducedMotionEnabled';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
 import { layout } from '@/src/theme/tokens';
 
 function usePulseOpacity() {
   const [opacity] = useState(() => new Animated.Value(0.45));
+  const reducedMotionEnabled = useReducedMotionEnabled();
+
   useEffect(() => {
+    if (reducedMotionEnabled) {
+      opacity.stopAnimation();
+      opacity.setValue(0.65);
+      return;
+    }
+
+    opacity.setValue(0.45);
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, { toValue: 0.85, duration: 900, useNativeDriver: true }),
@@ -17,7 +27,8 @@ function usePulseOpacity() {
     );
     animation.start();
     return () => animation.stop();
-  }, [opacity]);
+  }, [opacity, reducedMotionEnabled]);
+
   return opacity;
 }
 

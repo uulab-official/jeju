@@ -28,6 +28,7 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
 
   return (
     <View
+      nativeID="main-tab-bar"
       style={[
         styles.root,
         {
@@ -62,10 +63,17 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
 
           return (
             <HapticPressable
+              accessibilityHint={focused
+                ? '현재 탭입니다. 다시 누르면 목록 맨 위로 이동합니다.'
+                : `${meta.label} 화면으로 이동합니다.`}
               accessibilityLabel={options?.tabBarAccessibilityLabel ?? meta.label}
               accessibilityRole="tab"
-              accessibilityState={focused ? { selected: true } : {}}
+              accessibilityState={{ selected: focused }}
+              accessibilityValue={{ text: `${index + 1}/${state.routes.length}` }}
+              accessible
+              collapsable={false}
               feedback="none"
+              focusable
               key={route.key}
               onLongPress={onLongPress}
               onPress={onPress}

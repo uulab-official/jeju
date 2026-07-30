@@ -2,6 +2,8 @@ import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
+import { useReducedMotionEnabled } from '@/src/hooks/useReducedMotionEnabled';
+
 type StartupSplashProps = {
   message: string;
   progress: number;
@@ -12,6 +14,7 @@ export function StartupSplash({ message, progress }: StartupSplashProps) {
   const [animatedProgress] = useState(() => new Animated.Value(clamped));
   const currentProgress = useRef(clamped);
   const [displayProgress, setDisplayProgress] = useState(clamped);
+  const reducedMotionEnabled = useReducedMotionEnabled();
 
   useEffect(() => {
     const listener = animatedProgress.addListener(({ value }) => {
@@ -26,11 +29,11 @@ export function StartupSplash({ message, progress }: StartupSplashProps) {
     const target = Math.max(currentProgress.current, clamped);
     Animated.timing(animatedProgress, {
       toValue: target,
-      duration: 360,
+      duration: reducedMotionEnabled ? 0 : 360,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [animatedProgress, clamped]);
+  }, [animatedProgress, clamped, reducedMotionEnabled]);
 
   const width = animatedProgress.interpolate({
     inputRange: [0, 1],

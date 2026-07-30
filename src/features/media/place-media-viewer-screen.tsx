@@ -2,11 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
-import { Animated, FlatList, NativeScrollEvent, NativeSyntheticEvent, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AccessibilityInfo, Animated, FlatList, NativeScrollEvent, NativeSyntheticEvent, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticPressable } from '@/src/components/HapticPressable';
+import { useReducedMotionEnabled } from '@/src/hooks/useReducedMotionEnabled';
 import { usePlaceData } from '@/src/providers/PlaceDataProvider';
 import { layout, typography } from '@/src/theme/tokens';
 
@@ -15,7 +16,9 @@ export function PlaceMediaViewerScreen({ placeId, initialIndex = 0 }: { placeId:
   const { height, width } = useWindowDimensions();
   const { findPlace } = usePlaceData();
   const [dragY] = useState(() => new Animated.Value(0));
+  const reducedMotionEnabled = useReducedMotionEnabled();
   const place = findPlace(placeId);
+  const placeName = place?.name;
   const images = useMemo(() => {
     if (!place) return [];
     if (place.images?.length) return place.images;
@@ -28,6 +31,41 @@ export function PlaceMediaViewerScreen({ placeId, initialIndex = 0 }: { placeId:
     outputRange: [0.25, 1, 0.25],
     extrapolate: 'clamp',
   });
+
+  useEffect(() => {
+    if (!placeName) return;
+    AccessibilityInfo.announceForAccessibility(
+      `${placeName} 사진 보기. ${images.length || 1}장의 사진이 있어요.`,
+    );
+  }, [images.length, placeName]);
+
+  const dismissViewer = useCallback((direction: -1 | 1) => {
+    if (reducedMotionEnabled) {
+      router.back();
+      return;
+    }
+
+    Animated.timing(dragY, {
+      toValue: direction * height,
+      duration: 170,
+      useNativeDriver: true,
+    }).start(() => router.back());
+  }, [dragY, height, reducedMotionEnabled]);
+
+  const resetViewerPosition = useCallback(() => {
+    if (reducedMotionEnabled) {
+      dragY.setValue(0);
+      return;
+    }
+
+    Animated.spring(dragY, {
+      toValue: 0,
+      speed: 22,
+      bounciness: 4,
+      useNativeDriver: true,
+    }).start();
+  }, [dragY, reducedMotionEnabled]);
+
   const panResponder = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_, gesture) => (
       Math.abs(gesture.dy) > 10 && Math.abs(gesture.dy) > Math.abs(gesture.dx) * 1.25
@@ -36,29 +74,13 @@ export function PlaceMediaViewerScreen({ placeId, initialIndex = 0 }: { placeId:
     onPanResponderRelease: (_, gesture) => {
       const shouldDismiss = Math.abs(gesture.dy) > Math.min(140, height * 0.18) || Math.abs(gesture.vy) > 1.15;
       if (shouldDismiss) {
-        Animated.timing(dragY, {
-          toValue: gesture.dy < 0 ? -height : height,
-          duration: 170,
-          useNativeDriver: true,
-        }).start(() => router.back());
+        dismissViewer(gesture.dy < 0 ? -1 : 1);
         return;
       }
-      Animated.spring(dragY, {
-        toValue: 0,
-        speed: 22,
-        bounciness: 4,
-        useNativeDriver: true,
-      }).start();
+      resetViewerPosition();
     },
-    onPanResponderTerminate: () => {
-      Animated.spring(dragY, {
-        toValue: 0,
-        speed: 22,
-        bounciness: 4,
-        useNativeDriver: true,
-      }).start();
-    },
-  }), [dragY, height]);
+    onPanResponderTerminate: resetViewerPosition,
+  }), [dismissViewer, dragY, height, resetViewerPosition]);
 
   const onScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (!width) return;
@@ -66,7 +88,12 @@ export function PlaceMediaViewerScreen({ placeId, initialIndex = 0 }: { placeId:
   };
 
   return (
-    <View style={styles.screen}>
+    <View
+      accessibilityLabel={`${place?.name ?? '제주'} 사진 보기`}
+      accessibilityViewIsModal
+      importantForAccessibility="yes"
+      onAccessibilityEscape={() => router.back()}
+      style={styles.screen}>
       <StatusBar style="light" />
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]} />
       <Animated.View
