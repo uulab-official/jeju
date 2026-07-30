@@ -55,6 +55,12 @@ function sortJson(value) {
 
 function packageNativeConfigHash() {
   const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  // This validator-only setting pins checks to packages already embedded in the
+  // submitted binary. Remove it when creating the next native baseline.
+  if (packageJson.expo?.install) {
+    delete packageJson.expo.install;
+    if (Object.keys(packageJson.expo).length === 0) delete packageJson.expo;
+  }
   const nativeKeys = [
     'version',
     'dependencies',

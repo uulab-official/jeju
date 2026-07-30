@@ -37,7 +37,7 @@ export function PlaceDetailScreen({ id }: { id: string }) {
   const saved = isSaved(place.id);
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      <AppHeader back title={place.name} right={<HapticPressable accessibilityLabel={saved ? '저장 취소' : '장소 저장'} feedback="success" onPress={() => toggleSaved(place.id)} style={styles.headerAction}><Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={23} color={colors.primaryStrong} /></HapticPressable>} />
+      <AppHeader back title="장소 정보" right={<HapticPressable accessibilityLabel={saved ? '저장 취소' : '장소 저장'} feedback="success" onPress={() => toggleSaved(place.id)} style={styles.headerAction}><Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={23} color={colors.primaryStrong} /></HapticPressable>} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <HapticPressable
           accessibilityLabel={place.heroImageUrl ? `${place.name} 대표 사진 크게 보기` : undefined}

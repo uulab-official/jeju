@@ -115,5 +115,21 @@
       "expo-file-system": "57.0.1"
     }
   },
+  "expo": {
+    "install": {
+      "exclude": [
+        "expo",
+        "expo-asset",
+        "expo-constants",
+        "expo-notifications",
+        "expo-router",
+        "expo-updates",
+        "react-native",
+        "react-native-reanimated",
+        "react-native-worklets",
+        "eslint-config-expo"
+      ]
+    }
+  },
   "private": true
 }
