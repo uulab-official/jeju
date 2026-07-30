@@ -5,6 +5,7 @@ import { LayoutAnimation, ScrollView, StyleSheet, Text, View } from 'react-nativ
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
 import { useAppTheme } from '@/src/providers/AppThemeProvider';
+import { layout, pretendard, typography } from '@/src/theme/tokens';
 
 const questions = [
   ['여행 정보는 어디에서 오나요?', '한국관광공사 국문 관광정보 서비스(TourAPI)를 기준으로 장소를 수집하고, 상세 화면에 원문 출처와 이용 조건을 표시합니다. 연결이 일시적으로 지연되면 기기에 저장된 최근 자료를 먼저 보여드려요.'],
@@ -24,20 +25,37 @@ export default function FaqScreen() {
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <AppHeader back title="자주 묻는 질문" />
       <ScrollView contentContainerStyle={styles.content}>
-        {questions.map(([question, answer], index) => {
-          const expanded = open === index;
-          return (
-            <View key={question} style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <HapticPressable accessibilityLabel={`${question} ${expanded ? '접기' : '펼치기'}`} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpen(expanded ? null : index); }} style={styles.question}>
-                <Text style={[styles.questionText, { color: colors.text }]}>{question}</Text><Ionicons name={expanded ? 'remove' : 'add'} size={21} color={colors.primaryStrong} />
-              </HapticPressable>
-              {expanded ? <Text style={[styles.answer, { color: colors.muted, borderTopColor: colors.border }]}>{answer}</Text> : null}
-            </View>
-          );
-        })}
+        <Text style={[styles.eyebrow, { color: colors.primaryStrong }]}>이용 안내</Text>
+        <Text style={[styles.intro, { color: colors.text }]}>궁금한 내용을 빠르게 확인해 보세요.</Text>
+        <View style={[styles.list, { borderColor: colors.border }]}>
+          {questions.map(([question, answer], index) => {
+            const expanded = open === index;
+            return (
+              <View key={question} style={[styles.item, index < questions.length - 1 && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
+                <HapticPressable accessibilityLabel={`${question} ${expanded ? '접기' : '펼치기'}`} accessibilityRole="button" accessibilityState={{ expanded }} onPress={() => { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); setOpen(expanded ? null : index); }} style={styles.question}>
+                  <Text style={[styles.questionNumber, { color: colors.primaryStrong }]}>{String(index + 1).padStart(2, '0')}</Text>
+                  <Text style={[styles.questionText, { color: colors.text }]}>{question}</Text>
+                  <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.muted} />
+                </HapticPressable>
+                {expanded ? <Text style={[styles.answer, { color: colors.muted }]}>{answer}</Text> : null}
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, content: { padding: 18, gap: 10, paddingBottom: 34 }, item: { borderWidth: 1, borderRadius: 17, overflow: 'hidden' }, question: { minHeight: 62, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }, questionText: { flex: 1, fontSize: 15, fontWeight: '700' }, answer: { borderTopWidth: 1, padding: 16, fontSize: 14, lineHeight: 23 } });
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  content: { paddingHorizontal: layout.screenPadding, paddingTop: 14, paddingBottom: 40 },
+  eyebrow: { ...typography.label, marginHorizontal: 2, marginBottom: 8 },
+  intro: { ...pretendard(800), fontSize: 22, lineHeight: 30, letterSpacing: -0.4, marginHorizontal: 2, marginBottom: 26 },
+  list: { borderTopWidth: 1, borderBottomWidth: 1 },
+  item: { overflow: 'hidden' },
+  question: { minHeight: 64, paddingHorizontal: 2, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  questionNumber: { ...pretendard(700), width: 22, fontSize: 11, lineHeight: 16 },
+  questionText: { ...pretendard(700), flex: 1, fontSize: 14, lineHeight: 21 },
+  answer: { ...typography.body, paddingLeft: 36, paddingRight: 28, paddingBottom: 20, fontSize: 13, lineHeight: 21 },
+});
