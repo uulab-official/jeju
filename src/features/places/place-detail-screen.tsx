@@ -49,15 +49,22 @@ export function PlaceDetailScreen({ id }: { id: string }) {
           <LinearGradient colors={place.accent} style={StyleSheet.absoluteFill} />
           {place.heroImageUrl ? <Image source={{ uri: place.heroImageUrl }} contentFit="cover" cachePolicy="memory-disk" transition={200} style={StyleSheet.absoluteFill} /> : null}
           {place.heroImageUrl ? <LinearGradient colors={['rgba(0,0,0,0.04)', 'rgba(0,0,0,0.62)']} style={StyleSheet.absoluteFill} /> : null}
-          <Ionicons name="location" size={38} color="rgba(255,255,255,0.92)" />
           <Text selectable style={styles.heroRegion}>{place.region} · {place.area}</Text>
         </HapticPressable>
         {place.images && place.images.length > 1 ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>{place.images.slice(1, 8).map((image, index) => <HapticPressable accessibilityLabel={image.description || `${place.name} 사진 ${index + 2} 크게 보기`} feedback="light" key={`${image.url}-${index}`} onPress={() => router.push({ pathname: '/media/[placeId]', params: { placeId: place.id, index: String(index + 1) } })}><Image source={{ uri: image.thumbnailUrl || image.url }} contentFit="cover" cachePolicy="memory-disk" transition={150} style={styles.galleryImage} /></HapticPressable>)}</ScrollView> : null}
-        <View style={styles.heading}><Text selectable style={[styles.title, { color: colors.text }]}>{place.name}</Text><Text selectable style={[styles.category, { color: colors.primaryStrong }]}>{place.categoryLabel}</Text></View>
-        <Text selectable style={[styles.summary, { color: colors.text }]}>{place.summary}</Text>
-        <View style={styles.tags}>{place.tags.map((tag) => <Text key={tag} style={[styles.tag, { backgroundColor: colors.surfaceAlt, color: colors.muted }]}>#{tag}</Text>)}</View>
-        <View style={[styles.infoCard, { backgroundColor: colors.surfaceAlt }]}><Ionicons name="sparkles-outline" size={22} color={colors.primaryStrong} /><View style={styles.infoCopy}><Text selectable style={[styles.infoTitle, { color: colors.text }]}>알아두면 좋아요</Text><Text selectable style={[styles.infoText, { color: colors.muted }]}>{place.highlight}</Text></View></View>
-        {place.address || place.phone || place.openingHours || place.restDate || place.parking ? <View style={[styles.details, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={styles.heading}>
+          <Text selectable style={[styles.category, { color: colors.primaryStrong }]}>{place.categoryLabel}</Text>
+          <Text selectable style={[styles.title, { color: colors.text }]}>{place.name}</Text>
+          {place.tags.length ? <Text selectable numberOfLines={2} style={[styles.tagLine, { color: colors.muted }]}>{place.tags.slice(0, 5).join(' · ')}</Text> : null}
+        </View>
+        <Text selectable style={[styles.lead, { color: colors.text }]}>{place.highlight || place.summary}</Text>
+        {place.summary && place.summary !== place.highlight ? (
+          <View style={[styles.story, { borderColor: colors.border }]}>
+            <Text selectable style={[styles.storyTitle, { color: colors.text }]}>장소 이야기</Text>
+            <Text selectable style={[styles.summary, { color: colors.muted }]}>{place.summary}</Text>
+          </View>
+        ) : null}
+        {place.address || place.phone || place.openingHours || place.restDate || place.parking ? <View style={[styles.details, { borderColor: colors.border }]}>
           <Text selectable style={[styles.detailsTitle, { color: colors.text }]}>이용 정보</Text>
           {place.address ? <DetailRow icon="location-outline" label="주소" value={place.address} /> : null}
           {place.phone ? <DetailRow icon="call-outline" label="전화" value={place.phone} /> : null}
@@ -81,4 +88,36 @@ function DetailRow({ icon, label, value }: { icon: string; label: string; value:
   return <View style={styles.detailRow}><Ionicons name={icon as never} size={18} color={colors.primaryStrong} /><Text selectable style={[styles.detailLabel, { color: colors.muted }]}>{label}</Text><Text selectable style={[styles.detailValue, { color: colors.text }]}>{value}</Text></View>;
 }
 
-const styles = StyleSheet.create({ screen: { flex: 1 }, headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' }, content: { paddingHorizontal: layout.screenPadding, paddingBottom: 38, gap: 17 }, hero: { height: 220, borderRadius: 26, padding: 20, justifyContent: 'space-between', overflow: 'hidden', borderCurve: 'continuous' }, heroRegion: { color: '#FFFFFF', fontSize: 13, fontWeight: '900' }, gallery: { gap: 10, paddingRight: 10 }, galleryImage: { width: 138, height: 92, borderRadius: 16 }, heading: { gap: 5 }, title: { fontSize: 27, fontWeight: '900' }, category: { fontSize: 12, fontWeight: '900' }, summary: { fontSize: 16, lineHeight: 25 }, tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 }, tag: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, fontSize: 11 }, infoCard: { borderRadius: 19, padding: 17, flexDirection: 'row', gap: 12 }, infoCopy: { flex: 1, gap: 5 }, infoTitle: { fontSize: 14, fontWeight: '900' }, infoText: { fontSize: 13, lineHeight: 20 }, details: { borderWidth: 1, borderRadius: 20, padding: 16, gap: 13 }, detailsTitle: { fontSize: 16, fontWeight: '900', paddingBottom: 2 }, detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, detailLabel: { width: 56, fontSize: 12, lineHeight: 19 }, detailValue: { flex: 1, fontSize: 13, lineHeight: 19 }, actions: { flexDirection: 'row', gap: 8 }, mapButton: { flex: 1, minHeight: 52, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 8 }, primaryText: { fontSize: 13, fontWeight: '900' }, secondaryButton: { width: 52, height: 52, borderWidth: 1, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }, source: { borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }, sourceCopy: { flex: 1, gap: 3 }, sourceLabel: { fontSize: 11 }, sourceName: { fontSize: 14, fontWeight: '800' }, sourceLicense: { fontSize: 10, lineHeight: 15 }, sourceLink: { fontSize: 12, fontWeight: '900' }, notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 } });
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  headerAction: { width: layout.minTouchTarget, height: layout.minTouchTarget, alignItems: 'center', justifyContent: 'center' },
+  content: { paddingHorizontal: layout.screenPadding, paddingBottom: 38, gap: 20 },
+  hero: { height: 212, borderRadius: 14, padding: 16, justifyContent: 'flex-end', overflow: 'hidden', borderCurve: 'continuous' },
+  heroRegion: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  gallery: { gap: 8, paddingRight: 10 },
+  galleryImage: { width: 126, height: 84, borderRadius: 10 },
+  heading: { gap: 6 },
+  title: { fontSize: 28, lineHeight: 36, fontWeight: '900' },
+  category: { fontSize: 12, fontWeight: '900' },
+  tagLine: { fontSize: 12, lineHeight: 18 },
+  lead: { fontSize: 17, lineHeight: 27, fontWeight: '600' },
+  story: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 18, gap: 9 },
+  storyTitle: { fontSize: 17, fontWeight: '900' },
+  summary: { fontSize: 15, lineHeight: 25 },
+  details: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 17, gap: 13 },
+  detailsTitle: { fontSize: 16, fontWeight: '900', paddingBottom: 2 },
+  detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  detailLabel: { width: 56, fontSize: 12, lineHeight: 19 },
+  detailValue: { flex: 1, fontSize: 13, lineHeight: 19 },
+  actions: { flexDirection: 'row', gap: 8 },
+  mapButton: { flex: 1, minHeight: 52, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 8 },
+  primaryText: { fontSize: 13, fontWeight: '900' },
+  secondaryButton: { width: 52, height: 52, borderWidth: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  source: { borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sourceCopy: { flex: 1, gap: 3 },
+  sourceLabel: { fontSize: 11 },
+  sourceName: { fontSize: 14, fontWeight: '800' },
+  sourceLicense: { fontSize: 10, lineHeight: 15 },
+  sourceLink: { fontSize: 12, fontWeight: '900' },
+  notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+});
