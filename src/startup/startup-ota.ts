@@ -86,7 +86,13 @@ function ownership(policy: string | null) {
 
 export function createStartupGate(adapter: StartupAdapter, options: StartupOptions) {
   const { deadlineMs } = options;
-  const clock = options.clock ?? { now: () => performance.now(), setTimeout, clearTimeout };
+  // Browser host timers reject an arbitrary object as their receiver.
+  // Keep the host call global while preserving injected clock receivers.
+  const clock = options.clock ?? {
+    now: () => performance.now(),
+    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+    clearTimeout: (timer: ReturnType<typeof setTimeout>) => clearTimeout(timer),
+  };
   if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) throw new Error('Startup requires a finite positive deadline.');
   let runningUpdateId: string | null = null;
   try { runningUpdateId = adapter.facts().runningUpdateId; } catch { /* Fail open inside run. */ }
@@ -97,7 +103,7 @@ export function createStartupGate(adapter: StartupAdapter, options: StartupOptio
   let entryRecorded = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let expiresAt = Infinity;
-  const now = clock.now;
+  const now = () => clock.now();
   let nativeRevision = 0;
   let wakeNative: (() => void) | undefined;
   const listeners = new Set<(state: StartupSnapshot) => void>();
@@ -150,6 +156,30 @@ export function createStartupGate(adapter: StartupAdapter, options: StartupOptio
     if (!sameScope(before, current) || before.runningUpdateId !== current.runningUpdateId || before.isEmbeddedLaunch !== current.isEmbeddedLaunch) { finish('launch-facts-changed'); return null; }
     return active() ? current : null;
   }
+  async function nativeIdle(expectedFacts: LaunchFacts): Promise<NativeSnapshot | null> {
+    // On iOS a successful check/fetch Promise resolves before Expo publishes
+    // its completion state. Busy can therefore be our own completed operation
+    // or another native owner. Observe it within the ORIGINAL budget; never
+    // start another API or reload while that owner is still working.
+    while (active()) {
+      const observedRevision = nativeRevision;
+      if (!freshFacts(expectedFacts)) return null;
+      if (!adapter.canReload()) { finish('critical-flow'); return null; }
+      const native = adapter.nativeSnapshot();
+      if (native.error) { finish('native-update-error'); return null; }
+      if (!native.working) return native;
+      if (typeof native.downloadProgress === 'number' && Number.isFinite(native.downloadProgress) &&
+        native.downloadProgress >= 0 && native.downloadProgress <= 1) {
+        publish({ phase: 'downloading', progress: 0.4 });
+        reportDownload(native);
+      }
+      if (!active()) return null;
+      if (observedRevision !== nativeRevision) continue;
+      await new Promise<void>((wake) => { wakeNative = wake; });
+      wakeNative = undefined;
+    }
+    return null;
+  }
   async function activate(candidate: Candidate | null, expectedFacts: LaunchFacts, requirePending: boolean) {
     // reloadAsync selects the latest native cached update, not a supplied ID.
     // Revalidate that selection after every async boundary and notification.
@@ -161,26 +191,34 @@ export function createStartupGate(adapter: StartupAdapter, options: StartupOptio
       if (candidate.id.toLowerCase() === facts.runningUpdateId?.toLowerCase()) { finish('already-running'); return null; }
       const native = adapter.nativeSnapshot();
       if (native.error) { finish('native-update-error'); return null; }
+      // Last synchronous guard immediately before each irreversible boundary.
+      if (native.working) { finish('native-ownership-changed'); return null; }
       if (requirePending && !native.pending) { finish('candidate-no-longer-pending'); return null; }
       if (native.pending && (!eligible(native.candidate, facts) || native.candidate.id.toLowerCase() !== candidate.id.toLowerCase())) {
         finish('native-candidate-changed'); return null;
       }
       return active() ? facts : null;
     }
-    const facts = currentForActivation();
+    async function idleForActivation() {
+      if (!await nativeIdle(expectedFacts)) return null;
+      return currentForActivation();
+    }
+    const facts = await idleForActivation();
     if (!facts || !candidate) return;
     publish({ candidateId: candidate.id.toLowerCase() });
-    if (!currentForActivation()) return;
+    if (!await idleForActivation()) return;
     const key = attemptKey(facts, candidate.id);
     // Any prior attempt, even unreadable, suppresses repeat activation.
     const previous = await adapter.storage.get(key);
-    if (!currentForActivation()) return;
+    if (!await idleForActivation()) return;
     if (previous !== null) return finish('candidate-already-attempted');
+    if (!currentForActivation()) return;
     await adapter.storage.set(key, JSON.stringify({ state: 'attempted', projectId: facts.projectId?.toLowerCase(),
       runtimeVersion: facts.runtimeVersion, candidateId: candidate.id.toLowerCase(), attemptedAt: Date.now() }));
-    if (!currentForActivation()) return;
+    if (!await idleForActivation()) return;
     publish({ phase: 'applying', progress: 0.9, downloadProgress: undefined });
     // Subscribers can synchronously report background/unmount/entry/native changes.
+    if (!await idleForActivation()) return;
     if (!currentForActivation()) return;
     open = false; // Exactly one owner can request reload in this runtime.
     // Native success is not proof the candidate ran. No success continuation:
@@ -208,47 +246,67 @@ export function createStartupGate(adapter: StartupAdapter, options: StartupOptio
       publish({ phase: 'checking', progress: 0.25 });
       const policyOwner = ownership(facts.checkAutomatically);
       if (policyOwner === 'unknown') return finish('unsupported-update-policy');
-      // Observe already-running native work even with a manual launch policy.
-      if (policyOwner === 'native' || adapter.nativeSnapshot().working || adapter.nativeSnapshot().pending) {
-        // Native owns checking/downloading. Never duplicate its network work.
-        while (active()) {
-          const observedRevision = nativeRevision;
-          const native = adapter.nativeSnapshot();
-          if (native.error) return finish('native-update-error');
-          if (native.pending) return await activate(native.candidate, facts, true);
-          if (!native.working) {
-            if (policyOwner === 'native') return finish('no-native-pending-update');
-            break;
-          }
-          if (typeof native.downloadProgress === 'number' && Number.isFinite(native.downloadProgress) && native.downloadProgress >= 0 && native.downloadProgress <= 1) {
-            publish({ phase: 'downloading', progress: 0.4 });
-            reportDownload(native);
-          }
-          if (!active()) return;
-          if (observedRevision !== nativeRevision) continue;
-          await new Promise<void>((wake) => { wakeNative = wake; });
-          wakeNative = undefined;
-        }
-        if (!active() || policyOwner === 'native') return;
+      // Native ownership is re-read after every async continuation. A pending
+      // bundle borrowed from native cache must remain exact pending through
+      // activation, even when it arrives during our manual check/ledger read.
+      const initialNative = await nativeIdle(facts);
+      if (!initialNative) return;
+      if (initialNative.pending) return await activate(initialNative.candidate, facts, true);
+      if (policyOwner === 'native') return finish('no-native-pending-update');
+      if (!freshFacts(facts)) return;
+      // An event may arrive while the idle Promise is being delivered.
+      const beforeCheck = adapter.nativeSnapshot();
+      if (beforeCheck.working || beforeCheck.pending) {
+        const native = await nativeIdle(facts);
+        if (!native) return;
+        if (native.pending) return await activate(native.candidate, facts, true);
       }
-      if (!active()) return;
+      if (!freshFacts(facts)) return;
+      const checkSelection = adapter.nativeSnapshot();
+      if (checkSelection.error) return finish('native-update-error');
+      if (checkSelection.working) return finish('native-ownership-changed');
+      if (checkSelection.pending) return await activate(checkSelection.candidate, facts, true);
       const available = await adapter.check();
       const checkedFacts = freshFacts(facts);
       if (!checkedFacts) return;
+      let native = await nativeIdle(facts);
+      if (!native) return;
+      if (native.pending) return await activate(native.candidate, facts, true);
       if (!available) return finish('no-update');
       if (!eligible(available, checkedFacts)) return finish('uncertain-or-incompatible-candidate');
       if (available.id.toLowerCase() === checkedFacts.runningUpdateId?.toLowerCase()) return finish('already-running');
       const previous = await adapter.storage.get(attemptKey(facts, available.id));
       if (!freshFacts(facts)) return;
       if (previous !== null) return finish('candidate-already-attempted');
+      native = await nativeIdle(facts);
+      if (!native) return;
+      if (native.pending) return await activate(native.candidate, facts, true);
       publish({ phase: 'downloading', progress: 0.4 });
+      native = await nativeIdle(facts);
+      if (!native) return;
+      if (native.pending) return await activate(native.candidate, facts, true);
+      if (!freshFacts(facts)) return;
+      const beforeFetch = adapter.nativeSnapshot();
+      if (beforeFetch.error) return finish('native-update-error');
+      if (beforeFetch.working) return finish('native-ownership-changed');
+      if (beforeFetch.pending) return await activate(beforeFetch.candidate, facts, true);
       if (!active()) return;
       const downloaded = await adapter.fetch();
       if (!freshFacts(facts)) return;
+      native = await nativeIdle(facts);
+      if (!native) return;
+      if (native.pending) {
+        // A no-new API response may race a separately cached native selection.
+        // Adopt that exact cache, but never contradict a concrete fetched ID.
+        if (downloaded && typeof downloaded.id === 'string' &&
+          downloaded.id.toLowerCase() !== native.candidate?.id.toLowerCase()) return finish('native-candidate-changed');
+        return await activate(native.candidate, facts, true);
+      }
       if (!downloaded || typeof downloaded.id !== 'string' || downloaded.id.toLowerCase() !== available.id.toLowerCase()) {
         return finish('candidate-changed-during-download');
       }
-      await activate(downloaded, facts, false);
+      await activate(downloaded, facts, native.pending);
+
     } catch {
       finish('startup-error'); // Includes offline, native API and safety-storage failures.
     }

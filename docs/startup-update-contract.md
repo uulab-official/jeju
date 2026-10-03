@@ -44,3 +44,11 @@ Cloud validation of this payload:
 Before OTA, the coordinator must independently review the exact payload and run the original repository checks in a suitable existing dependency/native environment. Released-binary project/runtime linkage, custom-to-native splash appearance, actual old-Hangul rendering, reduced-motion behavior, background/foreground behavior and already-issued reload behavior still require release-build iOS/Android verification. JavaScript API/type evidence does not prove those installed-binary facts.
 
 Official API references: [Expo SDK 57 Updates](https://docs.expo.dev/versions/v57.0.0/sdk/updates/), [Font](https://docs.expo.dev/versions/v57.0.0/sdk/font/) and [SplashScreen](https://docs.expo.dev/versions/v57.0.0/sdk/splash-screen/).
+
+## Native/manual completion boundary
+
+The startup controller now observes native busy state after check, download, and every candidate-ledger boundary within the original app budget. iOS can resolve a successful Expo promise before its idle state event; that lag must neither start duplicate work nor discard the successful check. Native-cache selections adopted during a manual operation retain exact pending-candidate provenance through reload. Background, app entry, unmount, errors and the original absolute deadline permanently close activation. Existing native policy, auth/font readiness, splash visuals and application mode are unchanged. This is source-contract validation; release-device/native-runtime acceptance and OTA publication remain pending.
+
+The default clock also calls browser host timers globally, and injected clocks retain their own method receiver. This preserves the newer Promise timer fix while adding the ownership barrier.
+
+The outer readiness/font/native-handoff clocks also invoke browser timers globally. Injected stateful clocks keep their own receiver; budget, auth/font readiness and cancellation behavior are unchanged.

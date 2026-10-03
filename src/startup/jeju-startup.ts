@@ -52,7 +52,10 @@ export function createJejuStartupRuntime(adapter: StartupAdapter, services: Jeju
   const finishMs = options.finishMs ?? 180;
   if ([deadlineMs, otaWindowMs, fontTimeoutMs, themeTimeoutMs].some(value => !Number.isFinite(value) || value <= 0) ||
       [minimumSplashMs, finishMs].some(value => !Number.isFinite(value) || value < 0)) throw Error('Jeju startup budgets must be finite.');
-  const clock = options.clock ?? { now: () => performance.now(), setTimeout, clearTimeout };
+  const clock = options.clock ?? { now: () => performance.now(),
+    setTimeout: (callback: () => void, ms: number) => setTimeout(callback, ms),
+    clearTimeout: (timer: ReturnType<typeof setTimeout>) => clearTimeout(timer),
+  };
   const loadFonts = pendingOperation(services.loadFonts);
   const readTheme = pendingOperation(services.readTheme);
   let gate: StartupGate | undefined;
