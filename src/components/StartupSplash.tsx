@@ -7,9 +7,10 @@ import { useReducedMotionEnabled } from '@/src/hooks/useReducedMotionEnabled';
 type StartupSplashProps = {
   message: string;
   progress: number;
+  onLayout?: () => void;
 };
 
-export function StartupSplash({ message, progress }: StartupSplashProps) {
+export function StartupSplash({ message, progress, onLayout }: StartupSplashProps) {
   const clamped = Math.max(0, Math.min(1, progress));
   const [animatedProgress] = useState(() => new Animated.Value(clamped));
   const currentProgress = useRef(clamped);
@@ -41,7 +42,7 @@ export function StartupSplash({ message, progress }: StartupSplashProps) {
   });
 
   return (
-    <View accessibilityLabel={message} style={styles.root}>
+    <View accessibilityLabel={message} onLayout={onLayout} style={styles.root}>
       <View style={styles.logoSlot}>
         <Image
           accessibilityIgnoresInvertColors

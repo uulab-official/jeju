@@ -1,132 +1,53 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import * as Updates from 'expo-updates';
 import { useEffect, useRef, useState } from 'react';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
 import { StartupSplash } from '@/src/components/StartupSplash';
-import { pingAppwrite } from '@/src/lib/appwrite';
-import { AppThemeProvider, readThemePreference, ThemeMode, useAppTheme } from '@/src/providers/AppThemeProvider';
+import { AppThemeProvider, useAppTheme } from '@/src/providers/AppThemeProvider';
 import { FavoritesProvider } from '@/src/providers/FavoritesProvider';
 import { JejuDataProvider } from '@/src/providers/JejuDataProvider';
 import { PlaceDataProvider } from '@/src/providers/PlaceDataProvider';
 import { PushNotificationsProvider } from '@/src/providers/PushNotificationsProvider';
 import { SavedPlacesProvider } from '@/src/providers/SavedPlacesProvider';
+import { type JejuStartupState } from '@/src/startup/jeju-startup';
+import { StartupRecovery } from '@/src/startup/StartupRecovery';
+import { getStartupRuntime, hideStartupNativeSplash } from '@/src/startup/StartupRuntime';
 
 export { ErrorBoundary } from 'expo-router';
 
-void SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync().catch(() => {});
 SplashScreen.setOptions({ duration: 180, fade: true });
 
-const OTA_RELOAD_PROGRESS_KEY = '@jeju/startup/ota-progress/v1';
-const FONT_LOAD_TIMEOUT_MS = 5_000;
-const OTA_CHECK_TIMEOUT_MS = 15_000;
-const OTA_FETCH_TIMEOUT_MS = 60_000;
-const OTA_RELOAD_TIMEOUT_MS = 6_000;
-const APPWRITE_PING_TIMEOUT_MS = 4_000;
-const MINIMUM_SPLASH_MS = 650;
-
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    'Pretendard-100': require('../assets/fonts/pretendard/Pretendard-Thin.otf'),
-    'Pretendard-200': require('../assets/fonts/pretendard/Pretendard-ExtraLight.otf'),
-    'Pretendard-300': require('../assets/fonts/pretendard/Pretendard-Light.otf'),
-    'Pretendard-400': require('../assets/fonts/pretendard/Pretendard-Regular.otf'),
-    'Pretendard-500': require('../assets/fonts/pretendard/Pretendard-Medium.otf'),
-    'Pretendard-600': require('../assets/fonts/pretendard/Pretendard-SemiBold.otf'),
-    'Pretendard-700': require('../assets/fonts/pretendard/Pretendard-Bold.otf'),
-    'Pretendard-800': require('../assets/fonts/pretendard/Pretendard-ExtraBold.otf'),
-    'Pretendard-900': require('../assets/fonts/pretendard/Pretendard-Black.otf'),
-    NanumOld: require('../assets/fonts/NanumMyeongjo-YetHangul.ttf'),
-    NanumBold: require('../assets/fonts/NanumBarunGothicBold.ttf'),
-  });
-  const [fontWaitExpired, setFontWaitExpired] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [message, setMessage] = useState('제주를 준비하고 있어요');
-  const [progress, setProgress] = useState(0.08);
-  const [initialTheme, setInitialTheme] = useState<ThemeMode>('system');
-  const progressRef = useRef(0.08);
-  const fontReady = loaded || Boolean(error) || fontWaitExpired;
+  const [state, setState] = useState<JejuStartupState>({ phase: 'loading', fontsReady: false, theme: 'system', progress: 0.08, message: '제주를 준비하고 있어요' });
+  const mountRef = useRef<ReturnType<ReturnType<typeof getStartupRuntime>['mount']> | null>(null);
 
   useEffect(() => {
-    if (loaded || error) return;
-    const timer = setTimeout(() => setFontWaitExpired(true), FONT_LOAD_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [error, loaded]);
+    // A fresh effect owner also handles StrictMode cleanup/setup. The OTA owner
+    // stays sealed while real per-mount font/theme acquisition can refresh.
+    const mount = getStartupRuntime().mount();
+    mountRef.current = mount;
+    const unsubscribe = mount.subscribe(setState);
+    void mount.start();
+    return () => { unsubscribe(); mount.close('unmount'); if (mountRef.current === mount) mountRef.current = null; };
+  }, []);
 
   useEffect(() => {
-    if (!fontReady) return;
-    let cancelled = false;
-    const startedAt = Date.now();
-    const advance = (next: number, nextMessage: string) => {
-      if (cancelled) return;
-      progressRef.current = Math.max(progressRef.current, Math.min(1, next));
-      setProgress(progressRef.current);
-      setMessage(nextMessage);
-    };
+    // Committed ready/recovery roots can bypass custom-splash layout entirely.
+    if (state.fontsReady || state.phase === 'recovery') hideStartupNativeSplash();
+    if (state.phase === 'ready') getStartupRuntime().markAppEntered();
+  }, [state.fontsReady, state.phase]);
 
-    const boot = async () => {
-      const restored = Number(await AsyncStorage.getItem(OTA_RELOAD_PROGRESS_KEY).catch(() => null));
-      if (Number.isFinite(restored)) {
-        progressRef.current = Math.max(progressRef.current, Math.min(0.94, restored));
-        setProgress(progressRef.current);
-      }
-
-      await SplashScreen.hideAsync().catch(() => undefined);
-      advance(0.28, '최신 업데이트를 확인하고 있어요');
-
-      if (!__DEV__ && Updates.isEnabled) {
-        try {
-          const update = await withTimeout(Updates.checkForUpdateAsync(), OTA_CHECK_TIMEOUT_MS, 'OTA 업데이트 확인');
-          if (update.isAvailable) {
-            advance(0.68, '업데이트를 받고 있어요');
-            await withTimeout(Updates.fetchUpdateAsync(), OTA_FETCH_TIMEOUT_MS, 'OTA 업데이트 다운로드');
-            advance(0.94, '새로운 제주로 이동하고 있어요');
-            await AsyncStorage.setItem(OTA_RELOAD_PROGRESS_KEY, String(progressRef.current)).catch(() => undefined);
-            await withTimeout(Updates.reloadAsync(), OTA_RELOAD_TIMEOUT_MS, 'OTA 업데이트 적용');
-            return;
-          }
-        } catch (cause) {
-          if (__DEV__) console.warn('Startup OTA check failed', cause);
-        }
-      }
-
-      await AsyncStorage.removeItem(OTA_RELOAD_PROGRESS_KEY).catch(() => undefined);
-      advance(0.78, '저장된 제주와 연결하고 있어요');
-      const [theme] = await Promise.all([
-        readThemePreference().catch(() => 'system' as ThemeMode),
-        withTimeout(pingAppwrite(), APPWRITE_PING_TIMEOUT_MS, 'Appwrite 연결').catch(() => undefined),
-      ]);
-      if (!cancelled) setInitialTheme(theme);
-      advance(1, '준비 완료');
-
-      const remaining = Math.max(0, MINIMUM_SPLASH_MS - (Date.now() - startedAt));
-      await new Promise((resolve) => setTimeout(resolve, remaining + 180));
-      if (!cancelled) setReady(true);
-    };
-
-    void boot().catch(async () => {
-      await SplashScreen.hideAsync().catch(() => undefined);
-      if (cancelled) return;
-      setProgress(1);
-      setMessage('저장된 제주로 시작해요');
-      setReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [fontReady]);
-
-  if (!fontReady) return null;
-  if (!ready) return <StartupSplash message={message} progress={progress} />;
+  if (state.phase === 'recovery') return <StartupRecovery retrying={state.retrying} onLayout={hideStartupNativeSplash} onRetry={() => { void mountRef.current?.retry(); }} />;
+  if (!state.fontsReady) return null;
+  if (state.phase !== 'ready') return <StartupSplash message={state.message} progress={state.progress} onLayout={hideStartupNativeSplash} />;
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <AppThemeProvider initialMode={initialTheme}>
+      <AppThemeProvider initialMode={state.theme}>
         <JejuDataProvider>
           <PlaceDataProvider>
             <FavoritesProvider>
@@ -185,18 +106,4 @@ function Navigation() {
       </Stack>
     </ThemeProvider>
   );
-}
-
-async function withTimeout<T>(request: Promise<T>, timeoutMs: number, label: string): Promise<T> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      request,
-      new Promise<never>((_, reject) => {
-        timeout = setTimeout(() => reject(new Error(`${label} 시간이 초과됐습니다.`)), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timeout) clearTimeout(timeout);
-  }
 }
