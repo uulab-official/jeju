@@ -1,74 +1,108 @@
-# SDK 57 Hermes memory-regression patch
+# SDK 57 live patch alignment
 
-## Decision and sources
+## Why the memory fix needed a follow-up
 
-Baseline source: `52f8a24cda4e9e79293e824c3a590ea534755fd8`.
+Base source: `81b7786e87352a4fcd88840374986f8505ade22e`. That commit fixed the Hermes memory-regression floor with Expo 57.0.9 / React Native 0.86.2. Its bundled version map was older than Expo's live recommendations, and ten existing dependency-validation exclusions hid other advisories.
 
-The baseline reproduces the official Expo Doctor 1.20.4 warning: 20/21 checks pass, but Expo 57.0.8 and Hermes V1 250829098.0.14 are affected by the Worklets/Reanimated memory regression.
+Mac verification of that exact source on 2026-10-07 at 20:17:11–20:17:30 UTC reported ten visible companion mismatches and Doctor 20/21. The cloud baseline still reported Doctor 21/21 while its direct online install check timed out. A Doctor pass with fallback/cached metadata is therefore not sufficient evidence of current live alignment.
 
-Use the smallest official SDK 57 patch set for this production regression. [Expo's SDK 57 changelog](https://expo.dev/changelog/sdk-57#known-regressions) identifies Expo 57.0.9 with React Native 0.86.2 as the fix. The [React Native 0.86.2 release](https://github.com/react/react-native/releases/tag/v0.86.2) bumps Hermes V1 to 250829098.0.16. Exact supported companion versions come from `bundledNativeModules.json` inside the [official Expo 57.0.9 package](https://registry.npmjs.org/expo/57.0.9).
+The follow-up uses two official HTTP 200 responses captured at **2026-10-07T20:32:12.797Z**:
 
-This does not upgrade the SDK major or select the latest patch indiscriminately. The later development-startup fix in Expo 57.0.17 is a separate change. Xcode 27/iOS 27 has an additional scene-lifecycle requirement; check the actual Mac toolchain before an iOS build rather than silently changing native flags here.
+- [SDK 57 native module recommendations](https://api.expo.dev/v2/sdks/57.0.0/native-modules)
+- [SDK versions and related-package recommendations](https://api.expo.dev/v2/versions/latest)
+
+The native map plus SDK 57 related packages identify 18 outdated direct packages across 30 checked SDK-related dependencies, including Expo's separate `~57.0.27` advisory. This stays within SDK 57. It is not a major upgrade or an unrelated audit fix.
 
 ## Direct dependency matrix
 
-Versions below are resolved lockfile versions. The ten updated direct declarations are exact pins to prevent those versions from drifting. Transitive requirements still contain ranges; use `npm ci` for reproducibility of the full release dependency graph.
+All 18 changed declarations are exact pins. Use `npm ci` to reproduce the full locked graph; transitive requirements still contain ranges.
 
 | Package | Before | After |
 | --- | --- | --- |
-| expo | 57.0.8 | 57.0.9 |
-| react-native | 0.86.0 | 0.86.2 |
-| expo-asset | 57.0.7 | 57.0.8 |
-| expo-constants | 57.0.7 | 57.0.8 |
-| expo-notifications | 57.0.7 | 57.0.8 |
-| expo-router | 57.0.8 | 57.0.9 |
-| expo-updates | 57.0.10 | 57.0.11 |
-| react-native-reanimated | 4.5.0 | 4.5.1 |
-| react-native-worklets | 0.10.0 | 0.10.1 |
-| eslint-config-expo | 57.0.0 | 57.0.1 |
+| expo | 57.0.9 | 57.0.27 |
+| expo-asset | 57.0.8 | 57.0.19 |
+| expo-audio | 57.0.3 | 57.0.5 |
+| expo-constants | 57.0.8 | 57.0.21 |
+| expo-device | 57.0.1 | 57.0.2 |
+| expo-font | 57.0.1 | 57.0.4 |
+| expo-haptics | 57.0.1 | 57.0.3 |
+| expo-image | 57.0.1 | 57.0.5 |
+| expo-linear-gradient | 57.0.1 | 57.0.2 |
+| expo-linking | 57.0.4 | 57.0.12 |
+| expo-notifications | 57.0.8 | 57.0.22 |
+| expo-router | 57.0.9 | 57.0.25 |
+| expo-splash-screen | 57.0.5 | 57.0.9 |
+| expo-symbols | 57.0.1 | 57.0.3 |
+| expo-updates | 57.0.11 | 57.0.25 |
+| expo-web-browser | 57.0.2 | 57.0.3 |
+| react-native | 0.86.2 | 0.86.3 |
+| eslint-config-expo | 57.0.1 | 57.0.2 |
 
-Only 34 existing package-lock entries change version; the 916 package records and their paths are retained. The other 24 required transitive updates are:
+React/React DOM remain 19.2.3, Reanimated remains 4.5.1 and Worklets remains 0.10.1. The locked React types and React Native Web already satisfy the live recommendations and are unchanged.
 
-- Hermes compiler: 250829098.0.14 → 250829098.0.16
-- Fourteen React Native support packages: 0.86.0 → 0.86.2 (`assets-registry`, `babel-plugin-codegen`, `babel-preset`, `codegen`, `community-cli-plugin`, `debugger-frontend`, `debugger-shell`, `dev-middleware`, `gradle-plugin`, `js-polyfills`, `metro-babel-transformer`, `metro-config`, `normalize-colors`, `virtualized-lists`, all under `@react-native/`)
-- `@expo/cli`: 57.0.10 → 57.0.11
-- `@expo/inline-modules`: 0.1.3 → 0.1.4
-- `@expo/local-build-cache-provider`: 57.0.4 → 57.0.5
-- `@expo/log-box`: 57.0.1 → 57.0.2
-- `@expo/metro-runtime`: 57.0.7 → 57.0.8
-- `@expo/prebuild-config`: 57.0.9 → 57.0.10
-- `@expo/ui`: 57.0.7 → 57.0.8
-- `babel-preset-expo`: 57.0.4 → 57.0.5
-- `expo-modules-core`: 57.0.7 → 57.0.8
+## Validation exclusions and dependency closure
 
-The lockfile uses the official registry manifests and tarball integrity values for those versions. npm normalized the result, and a clean `npm ci` installed it successfully. No unrelated audit fix, additional direct dependency, or new override is included. The existing Appwrite file-system override and Expo validation exclusions remain unchanged. `test:sdk`, now part of `verify`, checks every direct SDK package against the installed Expo bundle even if it appears in those exclusions, and checks the native Hermes version as well as the compiler.
+All ten obsolete `expo.install.exclude` entries were removed. No package version check is bypassed:
 
-## Native change and release matrix
-
-| Area | Result |
+| Former exclusion | Resolution |
 | --- | --- |
-| Native dependency graph | Changed: React Native/Hermes, Reanimated/Worklets, Expo core/UI/log-box/assets/constants/notifications/router/updates and their build tooling |
-| Expo SDK major, React/React DOM | Unchanged: SDK 57, React 19.2.3 |
-| ExpoModulesJSI | Unchanged at 57.0.4; the existing postinstall Xcode compatibility patch remains unchanged |
-| App configuration and feature flags | Unchanged, including Hermes defaults, New Architecture and launcher selection |
-| App identity and account IDs | Unchanged |
-| Marketing/runtime/build values | Unchanged: version/runtime 1.0.0, iOS 26072801, Android 26072602 |
-| Approved artwork and launcher repair | Unchanged; launcher-generation regressions pass with the updated prebuild plugin |
-| Artifact submission guard and OTA baseline | Unchanged; OTA guard rejects the changed package manifest and lockfile against the old binary |
+| expo | Aligned to 57.0.27 |
+| expo-asset | Aligned to 57.0.19 |
+| expo-constants | Aligned to 57.0.21 |
+| expo-notifications | Aligned to 57.0.22 |
+| expo-router | Aligned to 57.0.25 |
+| expo-updates | Aligned to 57.0.25 |
+| react-native | Aligned to 0.86.3 |
+| react-native-reanimated | Already aligned at 4.5.1; now checked normally |
+| react-native-worklets | Already aligned at 0.10.1; now checked normally |
+| eslint-config-expo | Aligned to 57.0.2 |
 
-This requires fresh native binaries and is **not OTA-compatible with the old binary**. On the authorized Mac build path, use the exact final source commit, a clean lockfile installation, and the existing release process to choose compatible runtime/build values. Do not reuse an uploaded Android versionCode. Do not regenerate the OTA baseline until the new binaries are independently verified. Cloud tests do not prove native compilation, signing, launch behavior, memory performance, or store acceptance.
+The existing scoped Appwrite override remains scoped to `react-native-appwrite`, but its `expo-file-system` pin changes **57.0.1 → 57.0.7** because Expo 57.0.27 requires `~57.0.7`. This avoids duplicate native file-system installations. Linking 57.0.12 similarly requires one Constants installation at `~57.0.21`.
+
+The normalized lockfile changes 82 existing package versions, adds the Expo CLI dependency `sandbox-cli-detector@0.2.0`, and prunes 20 packages no longer required by the updated graph: 916 → 897 package records. Official package manifests, tarball URLs and integrity values were used. Updates follow required dependency ranges, plus the React Native Metro configuration package's 0.86.3 cohort alignment. No unrelated direct dependencies or new override scopes are introduced.
+
+## Native dependency and configuration matrix
+
+React Native **0.86.2 → 0.86.3** carries Hermes **250829098.0.16 → 250829098.0.17**, with the matching React Native support packages. Beyond the direct packages above, Apple/Android autolinking identifies these changed Expo native dependencies (Glass Effect and JSI are Apple-only in this graph):
+
+| Native dependency | Before | After |
+| --- | --- | --- |
+| @expo/log-box | 57.0.2 | 57.0.4 |
+| @expo/ui | 57.0.8 | 57.0.22 |
+| expo-application | 57.0.2 | 57.0.3 |
+| expo-eas-client | 57.0.1 | 57.0.5 |
+| expo-file-system | 57.0.1 | 57.0.7 |
+| expo-glass-effect | 57.0.1 | 57.0.4 |
+| expo-json-utils | 57.0.1 | 57.0.2 |
+| expo-keep-awake | 57.0.1 | 57.0.2 |
+| expo-manifests | 57.0.1 | 57.0.2 |
+| expo-modules-core | 57.0.8 | 57.0.21 |
+| expo-modules-jsi | 57.0.4 | 57.1.1 |
+| expo-structured-headers | 57.0.0 | 57.0.1 |
+| expo-updates-interface | 57.0.1 | 57.0.2 |
+
+- Autolinked module names/counts are unchanged: Android 28, Apple 30. Versions change for 26 Android and 29 Apple Expo modules; `swiftui`/`compose` core-feature settings are unchanged
+- Resolved public Expo config is exactly equal before/after. App identity, account IDs, feature flags, icon/splash configuration and declared permissions are unchanged
+- Approved artwork, launcher fallback and artifact submission/OTA guards are unchanged. Launcher-resource generation regressions pass against the updated prebuild plugin
+- Marketing/runtime/build values remain version/runtime **1.0.0**, iOS **26072801**, Android **26072602**. These are preserved source values, not proposed values for another store upload
+- The existing ExpoModulesJSI compatibility postinstall script is unchanged. On JSI 57.1.1 it transforms 13 Swift files; two subsequent runs change no files. This is source/idempotence verification, not a Swift compilation result
+
+The graph is **not OTA-compatible with the old binary**. The existing OTA guard rejects the changed manifest and lockfile. Build fresh native binaries on the authorized Mac path, choose compatible runtime/build values through the release procedure, and verify the exact artifacts before updating any native baseline. Do not reuse an uploaded Android versionCode.
+
+Xcode 27/iOS 27 requires Expo's opt-in scene-lifecycle support; this patch does not enable that flag. Confirm the actual Mac toolchain before an iOS build. Source checks cannot establish native compilation, signing, launch behavior, permissions in the final manifests, memory performance or store acceptance.
 
 ## Verification on 2026-10-07
 
-- Baseline: 187 Node tests pass; the new memory-regression guard fails on locked Expo 57.0.8; official Doctor reproduces 20/21
-- Candidate: clean `npm ci` succeeds; `npm ls --all` exits 0
-- Typecheck, lint, startup check, visual-assets check and public Expo configuration evaluation pass
-- Official Expo Doctor: 21/21, including the Hermes regression check
-- Expo autolinking resolves on Android and Apple: module counts stay 28 and 30 respectively, with nine Expo package versions changed; no package names or core-feature settings are added or removed
-- Full Node suite: 189 pass, 0 fail, including launcher/artifact guards and both collectors
-- `test:sdk`: checks locked/installed versions, RN's native Hermes version and all direct SDK companion versions without relying on `install.exclude`
-- OTA guard exits 1 as intended, identifying `package.json` and `package-lock.json` as native-sensitive differences
-- Offline `expo install --check` reports up to date but warns its validation is unreliable and lists the existing exclusions; this is not treated as standalone compatibility evidence
-- Online `expo install --check` was attempted and fails with `HTTP Proxy timed out`; the Mac must repeat that network-dependent check
+- Full cloud clone matched all 395 base repository blobs
+- Before changes: 189 existing Node tests pass; new captured-version/exclusion regressions fail in 19 expected cases
+- Clean `npm ci`: succeeds, 839 packages installed
+- Full Node suite: **210 pass, 0 fail**, including launcher, startup, artifact guards and both collector suites
+- Typecheck, lint, startup, visual-assets and public Expo config evaluation pass
+- Doctor 1.20.4: **21/21**; `test:sdk`: **23/23**, including captured live minima, no exclusions, single compatible Constants/file-system modules and native/compiler Hermes agreement
+- Independent direct comparison against the captured live APIs: **30 checked, 0 mismatches, 0 exclusions**
+- An unexcluded online `expo install --check` invocation exits 0, reporting dependencies up to date; `EXPO_OFFLINE` and `EXPO_NO_DEPENDENCY_VALIDATION` are unset. A separate forced-fresh (`EXPO_NO_CACHE=1`) reviewer invocation reaches the remote-map fetch but fails with `HTTP Proxy timed out`. Cloud network/cache behavior is therefore not consistently reliable; the successful direct HTTP 200 map comparison is recorded separately, and Mac must repeat a fresh online CLI check
+- Offline check also exits 0, but retains its unreliable-offline warning and is not used as proof of live compatibility
+- `npm ls --all` exits 0; this is not a claim that npm emits no optional-package notices
+- OTA guard exits 1 as intended, identifying `package.json` and `package-lock.json`
 
-The aggregate `npm run verify` is **not fully green** in the credential-free cloud checkout: after the passing checks above it stops at the existing server-only `APPWRITE_API_KEY` requirement. The collector tests were run independently as part of the full Node suite. No `.env`, credentials, live-service calls, native build, deployment, OTA publication or store submission was performed.
+The aggregate `npm run verify` remains **blocked** at the existing server-only `APPWRITE_API_KEY` requirement after the preceding checks pass. Collector tests were also run independently in the full suite. No credentials were copied or fabricated. No native build, deployment, OTA publication or store submission was performed in cloud.
