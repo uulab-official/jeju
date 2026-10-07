@@ -67,6 +67,9 @@ npm run push:check
 
 ## 배포
 
+바이너리 제출은 [명시적 후보 manifest 가드](docs/artifact-submission-guard.md)를 사용합니다.
+`submit:ios`/`submit:android`에는 `--path`와 `--manifest`가 필수이며 `--latest`는 사용하지 않습니다.
+
 서명 파일과 서비스 계정 키는 Git에서 제외됩니다. 로컬/CI에서는 UULab 중앙 자격 증명과 `credentials.json`을 사용합니다.
 
 ```bash

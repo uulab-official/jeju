@@ -176,19 +176,12 @@ function build(target) {
 
 function submit(target) {
   requireBinaryReason('submit');
-  const slug = appSlug();
-  if (target === 'all') {
-    submit('ios');
-    submit('android');
-    return;
-  }
-  const ext = target === 'ios' ? 'ipa' : 'aab';
-  const artifact = `./dist/${slug}-${target}-production.${ext}`;
-  if (!dryRun && !fs.existsSync(path.join(root, artifact))) {
-    console.error(`Missing artifact: ${artifact}`);
-    process.exit(1);
-  }
-  run(`eas submit --profile production --platform ${target} --path ${artifact} --non-interactive`);
+  const { parseSubmissionArgs, verifyArtifact } = require('./artifact-version-check');
+  const selection = parseSubmissionArgs(args.slice(2));
+  const candidate = verifyArtifact({ platform: target, ...selection });
+  console.log(`Verified selected artifact identity: ${candidate.applicationId} ${candidate.marketingVersion} (${candidate.buildVersion}), sha256=${candidate.sha256}`);
+  runArgs('eas', ['submit', '--profile', 'production', '--platform', target,
+    '--path', candidate.artifactPath, '--non-interactive']);
 }
 
 function ota() {
@@ -232,8 +225,7 @@ try {
   else if (command === 'build') build(platform);
   else if (command === 'submit') submit(platform);
   else if (command === 'release') {
-    build(platform);
-    submit(platform);
+    throw new Error('Combined build/submit is disabled. Build separately, then submit one explicit candidate with --path and --manifest.');
   } else if (command === 'ota' || command === 'update') ota();
   else {
     console.error('Usage: uulab-expo-harness <audit|verify|build|submit|release|ota> [ios|android|all] [--dry-run]');
