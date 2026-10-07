@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const sharp = require('sharp');
 
-const root = path.resolve(__dirname, '..');
+const root = path.resolve(process.argv[2] || path.join(__dirname, '..'));
 const imagePath = (name) => path.join(root, 'assets', 'images', name);
 const failures = [];
 const storeIconPath = (locale) =>
@@ -128,14 +128,33 @@ async function inspectGooglePlayIcon(locale) {
   }
 }
 
+async function inspectLauncherArtwork(file, label) {
+  if (!file || !fs.existsSync(path.resolve(root, file))) {
+    failures.push(`${label} is missing.`);
+    return;
+  }
+  const { data } = await sharp(path.resolve(root, file)).toColourspace('srgb').ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const colors = new Set();
+  for (let offset = 0; offset < data.length; offset += 4) {
+    // Alpha padding must not make a solid white square look like artwork.
+    if (data[offset + 3] >= 128) colors.add(`${data[offset]},${data[offset + 1]},${data[offset + 2]}`);
+    if (colors.size > 1) return;
+  }
+  failures.push(`${label} is blank or single-color; use the approved mountain/sun/waves artwork.`);
+}
+
 async function main() {
+  const appConfig = JSON.parse(fs.readFileSync(path.join(root, 'app.base.json'), 'utf8')).expo;
+  const legacyIcon = appConfig.android?.icon || appConfig.icon;
+  const adaptiveIcon = appConfig.android?.adaptiveIcon;
   await Promise.all([
     ...assets.map(inspectAsset),
     inspectGooglePlayIcon('ko-KR'),
     inspectGooglePlayIcon('en-US'),
+    inspectLauncherArtwork(legacyIcon, 'Android launcher'),
+    ...(adaptiveIcon ? [inspectLauncherArtwork(adaptiveIcon.foregroundImage || legacyIcon, 'Android adaptive foreground')] : []),
   ]);
 
-  const appConfig = JSON.parse(fs.readFileSync(path.join(root, 'app.base.json'), 'utf8')).expo;
   const splashPlugin = appConfig.plugins.find(
     (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen',
   );
@@ -148,11 +167,8 @@ async function main() {
   if (appConfig.icon !== './assets/images/icon.png' || appConfig.ios?.icon !== './assets/images/icon.png') {
     failures.push('iOS and root launcher icon paths must use assets/images/icon.png.');
   }
-  if (appConfig.android?.adaptiveIcon?.foregroundImage !== './assets/images/android-icon-foreground.png') {
-    failures.push('Android adaptive foreground must use android-icon-foreground.png.');
-  }
-  if (appConfig.android?.adaptiveIcon?.monochromeImage !== './assets/images/android-icon-monochrome.png') {
-    failures.push('Android monochrome icon must use android-icon-monochrome.png.');
+  if (appConfig.android?.icon && appConfig.android.icon !== appConfig.icon) {
+    failures.push('Android standard launcher must use the same approved artwork as the root icon.');
   }
   if (notificationOptions.icon !== './assets/images/notification-icon.png') {
     failures.push('Expo notifications must use notification-icon.png.');
@@ -178,7 +194,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    'Visual asset check passed: launcher, Google Play, adaptive, monochrome, notification, favicon, and splash assets.',
+    'Visual asset check passed: active launcher artwork, Google Play parity, and remaining asset dimensions/alpha bounds.',
   );
 }
 
