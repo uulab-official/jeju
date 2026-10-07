@@ -62,7 +62,7 @@
     "appwrite:collect:tourism:full": "appwrite functions create-execution --function-id collect-jeju-tourism --body '{\"full\":true}' --async true",
     "data:health": "node scripts/data-health-check.js",
     "test:data": "node --test functions/collect-jeju-tourism/test/collector.test.mjs functions/collect-jeju-culture/test/collector.test.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run doctor && npm run test:sdk && npm run startup:check && npm run visual-assets:check && npm run appwrite:check && npm run test:data",
+    "verify": "npm run typecheck && npm run lint && npm run doctor && npm run test:sdk && npm run test:ios-build && npm run startup:check && npm run visual-assets:check && npm run appwrite:check && npm run test:data",
     "preflight": "npm run verify && npx expo install --check && npx expo config --type public > /tmp/jeju-expo-config.txt",
     "preflight:test": "npm run preflight",
     "preflight:production": "npm run push:check && npm run preflight",
@@ -72,11 +72,11 @@
     "release:version": "node scripts/set-release-version.js",
     "test:store-assets": "ruby scripts/app-store-screenshot-integrity.test.rb",
     "release:assets:check": "npm run test:store-assets && node scripts/verify-release-asset-isolation.js",
-    "build:local:ios": "mkdir -p dist && eas build --profile production --platform ios --local --non-interactive --output ./dist/jeju-ios-production.ipa",
+    "build:local:ios": "mkdir -p dist && node scripts/ios-local-build.cjs --profile production --output ./dist/jeju-ios-production.ipa",
     "build:local:android": "mkdir -p dist && GRADLE_OPTS='-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=2g -Dfile.encoding=UTF-8' ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk} eas build --profile production --platform android --local --non-interactive --output ./dist/jeju-android-production.aab",
-    "build:screenshot:ios": "mkdir -p artifacts && eas build --profile screenshot --platform ios --local --non-interactive --output ./artifacts/jeju-ios-screenshot.tar.gz",
+    "build:screenshot:ios": "mkdir -p artifacts && node scripts/ios-local-build.cjs --profile screenshot --output ./artifacts/jeju-ios-screenshot.tar.gz",
     "screenshots:compose": "node scripts/generate-store-screenshots.mjs",
-    "build:testflight:ios": "npm run preflight:production && mkdir -p artifacts && eas build --profile production --platform ios --local --non-interactive --output ./artifacts/jeju-ios-production.ipa",
+    "build:testflight:ios": "npm run preflight:production && mkdir -p artifacts && node scripts/ios-local-build.cjs --profile production --output ./artifacts/jeju-ios-production.ipa",
     "build:play:android": "npm run preflight:production && mkdir -p artifacts && GRADLE_OPTS='-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=2g -Dfile.encoding=UTF-8' ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk} eas build --profile production --platform android --local --non-interactive --output ./artifacts/jeju-android-production.aab",
     "submit:ios": "npm run release:assets:check && node scripts/uulab-expo-harness.js submit ios",
     "submit:android": "npm run release:assets:check && node scripts/uulab-expo-harness.js submit android",
@@ -109,7 +109,9 @@
     "update:ios": "node scripts/uulab-expo-harness.js ota ios --message",
     "update:android": "node scripts/uulab-expo-harness.js ota android --message",
     "ios:upload-xcode": "bundle exec fastlane ios upload_xcode",
-    "test:sdk": "node --test tests/sdk-patch-alignment.test.cjs"
+    "test:sdk": "node --test tests/sdk-patch-alignment.test.cjs",
+    "ios:toolchain:check": "node scripts/ios-local-build.cjs --check",
+    "test:ios-build": "node --test tests/ios-local-build.test.cjs tests/ios-host-guard.test.cjs tests/credential-wrapper.test.cjs"
   },
   "overrides": {
     "react-native-appwrite": {

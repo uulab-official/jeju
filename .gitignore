@@ -73,3 +73,7 @@ google-services.json
 GoogleService-Info.plist
 **/google-services.json
 **/GoogleService-Info.plist
+
+# Managed Ruby dependencies
+.bundle/
+vendor/bundle/

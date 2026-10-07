@@ -166,7 +166,7 @@ function build(target) {
   preflight(target);
   fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
   if (target === 'ios') {
-    run(`eas build --profile production --platform ios --local --non-interactive --output ./dist/${slug}-ios-production.ipa`);
+    runArgs(process.execPath, ['scripts/ios-local-build.cjs', '--profile', 'production', '--output', `./dist/${slug}-ios-production.ipa`]);
   } else if (target === 'android') {
     run(`GRADLE_OPTS='-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=2g -Dfile.encoding=UTF-8' ANDROID_HOME=\${ANDROID_HOME:-$HOME/Library/Android/sdk} ANDROID_SDK_ROOT=\${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk} eas build --profile production --platform android --local --non-interactive --output ./dist/${slug}-android-production.aab`);
   } else {
