@@ -6,13 +6,13 @@
       "ios",
       "android"
     ],
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "jeju",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#FFFCF7",
-    "runtimeVersion": "1.0.0",
+    "runtimeVersion": "jeju-sdk57.0.27-rn0.86.3-20261008",
     "updates": {
       "enabled": true,
       "checkAutomatically": "NEVER",
@@ -22,7 +22,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "kr.co.uulab.jeju",
-      "buildNumber": "26072801",
+      "buildNumber": "26100801",
       "supportsTablet": false,
       "entitlements": {
         "aps-environment": "production"
@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "kr.co.uulab.jeju",
-      "versionCode": 26072602,
+      "versionCode": 26100801,
       "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
