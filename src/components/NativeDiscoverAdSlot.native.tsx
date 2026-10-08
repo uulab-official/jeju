@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import type { NativeAd } from 'react-native-google-mobile-ads';
 
@@ -30,7 +30,10 @@ export function NativeDiscoverAdSlot() {
   const [privacyRevision, setPrivacyRevision] = useState(0);
   const [nativeAd, setNativeAd] = useState<NativeAd | null>(null);
   const [loadState, setLoadState] = useState<LoadState>(() => ads ? 'loading' : 'empty');
+  const cancelPendingAd = useRef<(() => void) | null>(null);
   useEffect(() => subscribeToAdPrivacyChanges(() => {
+    // Invalidate synchronously: native promises can settle before React cleanup.
+    cancelPendingAd.current?.();
     setNativeAd(null);
     setLoadState('empty');
     setPrivacyRevision(value => value + 1);
@@ -41,6 +44,12 @@ export function NativeDiscoverAdSlot() {
     const adsModule = ads;
     let active = true;
     let loadedAd: NativeAd | null = null;
+    const cancel = () => {
+      active = false;
+      safeDestroyNativeAd(loadedAd);
+      loadedAd = null;
+    };
+    cancelPendingAd.current = cancel;
 
     async function load() {
       const adUnitId = getNativeDiscoverAdUnitId();
@@ -91,8 +100,8 @@ export function NativeDiscoverAdSlot() {
       if (active) setLoadState('empty');
     });
     return () => {
-      active = false;
-      safeDestroyNativeAd(loadedAd);
+      cancel();
+      if (cancelPendingAd.current === cancel) cancelPendingAd.current = null;
     };
   }, [ads, privacyRevision]);
 

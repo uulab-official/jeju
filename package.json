@@ -114,7 +114,7 @@
     "test:sdk": "node --test tests/sdk-patch-alignment.test.cjs",
     "ios:toolchain:check": "node scripts/ios-local-build.cjs --check",
     "test:ios-build": "node --test tests/ios-local-build.test.cjs tests/ios-host-guard.test.cjs tests/credential-wrapper.test.cjs",
-    "test:ads": "node --test tests/admob-config.test.cjs tests/admob-consent.test.mjs tests/admob-model.test.mjs"
+    "test:ads": "node --test tests/admob-config.test.cjs tests/admob-consent.test.mjs tests/admob-model.test.mjs tests/admob-component.test.cjs"
   },
   "overrides": {
     "react-native-appwrite": {

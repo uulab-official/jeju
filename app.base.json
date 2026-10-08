@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "kr.co.uulab.jeju",
-      "versionCode": 26100801,
+      "versionCode": 26100802,
       "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,

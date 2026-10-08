@@ -50,3 +50,15 @@ test('privacy change invalidates permission and notifies loaded ad owners',async
   assert.equal(await f.controller.showPrivacyOptions(),'shown');assert.ok(changes>=1);
   assert.equal(await f.controller.prepare(),false);assert.equal(f.calls.initialize,1);unsubscribe();
 });
+test('privacy invalidation during the final native permission read vetoes the request',async () => {
+  const {createConsentController}=await loadController();
+  let finishRead;
+  const f=fixture(createConsentController,{getConsentInfo:()=>new Promise(resolve=>{finishRead=resolve;})});
+  const preparation=f.controller.prepare();
+  for(let i=0;i<10&&!finishRead;i++) await Promise.resolve();
+  assert.equal(typeof finishRead,'function');
+  const privacy=f.controller.showPrivacyOptions();
+  finishRead({canRequestAds:true});
+  assert.equal(await preparation,false);
+  assert.equal(await privacy,'shown');
+});

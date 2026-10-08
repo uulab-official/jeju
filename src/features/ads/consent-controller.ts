@@ -26,7 +26,8 @@ export function createConsentController(sdk: ConsentSdk) {
       if (!consent.canRequestAds || privacyOpen || startingRevision !== revision) return false;
       gathered = true;
       if (!initialized) { await sdk.initialize(); initialized = true; }
-      return !privacyOpen && startingRevision === revision && (await sdk.getConsentInfo()).canRequestAds;
+      const currentConsent = await sdk.getConsentInfo();
+      return !privacyOpen && startingRevision === revision && currentConsent.canRequestAds;
     })().catch(() => false).finally(() => { preparation = null; });
     return preparation;
   }
