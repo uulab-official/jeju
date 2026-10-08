@@ -102,6 +102,7 @@ function Navigation() {
         <Stack.Screen name="settings/notices" />
         <Stack.Screen name="settings/faq" />
         <Stack.Screen name="settings/privacy" />
+        <Stack.Screen name="settings/ad-privacy" />
         <Stack.Screen name="settings/terms" />
       </Stack>
     </ThemeProvider>

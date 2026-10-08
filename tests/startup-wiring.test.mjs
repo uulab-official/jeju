@@ -35,9 +35,11 @@ test('custom splash is byte-identical to the pinned brand after removing the lay
   const hash = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
   assert.equal(hash, 'f5246d33e377950cf6b51d412811e9425fe12b4a');
 });
-test('all navigation routes and theme behavior are unchanged from the pinned root', () => {
+test('existing navigation and theme remain pinned alongside the new ad privacy route', () => {
   const root = read('app/_layout.tsx');
-  const source = root.slice(root.indexOf('function Navigation()')).trim() + '\n';
+  const adPrivacyRoute = '        <Stack.Screen name="settings/ad-privacy" />\n';
+  assert.equal(root.split(adPrivacyRoute).length - 1, 1);
+  const source = root.slice(root.indexOf('function Navigation()')).replace(adPrivacyRoute, '').trim() + '\n';
   assert.equal(createHash('sha256').update(source).digest('hex'), 'f90a304f32e7fc91bf98c18439af6505005d4f6153a580258742dc91ba0cec02');
 });
 test('all eleven original font assets and the essential NanumOld family are retained', () => {

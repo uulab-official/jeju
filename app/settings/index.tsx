@@ -26,6 +26,7 @@ const sections = [
   {
     title: '정보와 지원',
     rows: [
+      { label: '광고 개인정보 설정', value: '광고 동의 선택', route: '/settings/ad-privacy' },
       { label: '개인정보 처리방침', value: '저장 정보 확인', route: '/settings/privacy' },
       { label: '이용약관', value: '서비스 이용 기준', route: '/settings/terms' },
       { label: '앱 정보', value: '버전과 오픈데이터 출처', route: '/settings/about' },

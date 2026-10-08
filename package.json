@@ -9,6 +9,7 @@
     "expo": "57.0.27",
     "expo-asset": "57.0.19",
     "expo-audio": "57.0.5",
+    "expo-build-properties": "57.0.22",
     "expo-constants": "57.0.21",
     "expo-device": "57.0.2",
     "expo-font": "57.0.4",
@@ -28,6 +29,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-appwrite": "^0.34.0",
+    "react-native-google-mobile-ads": "16.0.3",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -62,7 +64,7 @@
     "appwrite:collect:tourism:full": "appwrite functions create-execution --function-id collect-jeju-tourism --body '{\"full\":true}' --async true",
     "data:health": "node scripts/data-health-check.js",
     "test:data": "node --test functions/collect-jeju-tourism/test/collector.test.mjs functions/collect-jeju-culture/test/collector.test.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run doctor && npm run test:sdk && npm run test:ios-build && npm run startup:check && npm run visual-assets:check && npm run appwrite:check && npm run test:data",
+    "verify": "npm run typecheck && npm run lint && npm run doctor && npm run test:ads && npm run test:sdk && npm run test:ios-build && npm run startup:check && npm run visual-assets:check && npm run appwrite:check && npm run test:data",
     "preflight": "npm run verify && npx expo install --check && npx expo config --type public > /tmp/jeju-expo-config.txt",
     "preflight:test": "npm run preflight",
     "preflight:production": "npm run push:check && npm run preflight",
@@ -111,7 +113,8 @@
     "ios:upload-xcode": "bundle exec fastlane ios upload_xcode",
     "test:sdk": "node --test tests/sdk-patch-alignment.test.cjs",
     "ios:toolchain:check": "node scripts/ios-local-build.cjs --check",
-    "test:ios-build": "node --test tests/ios-local-build.test.cjs tests/ios-host-guard.test.cjs tests/credential-wrapper.test.cjs"
+    "test:ios-build": "node --test tests/ios-local-build.test.cjs tests/ios-host-guard.test.cjs tests/credential-wrapper.test.cjs",
+    "test:ads": "node --test tests/admob-config.test.cjs tests/admob-consent.test.mjs tests/admob-model.test.mjs"
   },
   "overrides": {
     "react-native-appwrite": {

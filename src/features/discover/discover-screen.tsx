@@ -5,6 +5,8 @@ import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 're
 
 import { AppHeader } from '@/src/components/AppHeader';
 import { HapticPressable } from '@/src/components/HapticPressable';
+import { NativeDiscoverAdSlot } from '@/src/components/NativeDiscoverAdSlot';
+import { shouldInsertDiscoverAd } from '@/src/features/ads/model';
 import { SearchField } from '@/src/components/SearchField';
 import { placeCategories } from '@/src/data/places';
 import { PlaceCard } from '@/src/features/discover/components/place-card';
@@ -49,7 +51,7 @@ export function DiscoverScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void refresh()} tintColor={colors.primaryStrong} />}
         ListHeaderComponent={<Text selectable style={[styles.count, { color: colors.muted }]}>{places.length}곳을 찾았어요 · {sourceLabel[source]}{lastUpdatedAt ? ` · ${formatCollectedAt(lastUpdatedAt)}` : ''}</Text>}
         ListEmptyComponent={<View style={styles.empty}><Ionicons name="compass-outline" size={34} color={colors.muted} /><Text selectable style={[styles.emptyTitle, { color: colors.text }]}>조건에 맞는 장소가 없어요</Text><Text selectable style={[styles.emptyText, { color: colors.muted }]}>검색어나 카테고리를 바꿔 보세요.</Text></View>}
-        renderItem={({ item }) => <PlaceCard place={item} />}
+        renderItem={({ item, index }) => <View><PlaceCard place={item} />{shouldInsertDiscoverAd({ index, itemCount: places.length, query, hasError: Boolean(error) }) ? <NativeDiscoverAdSlot /> : null}</View>}
       />
     </View>
   );
