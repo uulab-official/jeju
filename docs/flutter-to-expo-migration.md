@@ -33,7 +33,7 @@ Flutter의 Provider별 XML 파서를 `src/services/jejuApi.ts`의 단일 타입 
 
 ## Remaining release work
 
-- 카카오 로그인을 사용할 경우 Supabase 세션 교환 백엔드와 네이티브 로그인 UI 구현
+- 카카오 로그인을 사용할 경우 세션 교환 백엔드와 네이티브 로그인 UI 구현
 - 운영 support/privacy/marketing URL 공개 및 메타데이터 URL 교체
 - 실제 기기에서 iOS/Android 냉간 실행, 발음 재생, 네트워크 차단/복구 검증
 - 스토어 스크린샷 생성과 로컬 서명 바이너리 빌드
